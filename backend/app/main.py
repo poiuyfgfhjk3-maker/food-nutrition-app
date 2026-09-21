@@ -3,7 +3,7 @@ import io
 import shutil
 from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, BackgroundTasks
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -228,6 +228,16 @@ def sync_raw_folder():
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 FRONTEND_INDEX = os.path.join(PROJECT_ROOT, "frontend", "public", "index.html")
 FRONTEND_ISLAND = os.path.join(PROJECT_ROOT, "frontend", "public", "island.html")
+FRONTEND_ASSETS = os.path.join(PROJECT_ROOT, "frontend", "public", "assets")
+os.makedirs(FRONTEND_ASSETS, exist_ok=True)
+app.mount("/assets", StaticFiles(directory=FRONTEND_ASSETS), name="assets")
+
+@app.get("/assets/{file_name}")
+def serve_asset(file_name: str):
+    file_path = os.path.join(FRONTEND_ASSETS, file_name)
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    raise HTTPException(status_code=404, detail="Asset not found")
 
 @app.get("/", response_class=HTMLResponse)
 def serve_index():

@@ -37,10 +37,11 @@ GUARDIANS = {
         "name": "가디언 베어",
         "role": "단백질 수호자",
         "emoji": "🐻",
+        "image": "/assets/guardian_bear.png",
         "color": "#e67e22",
-        "title": "단단한 근육과 성장 파워",
+        "title": "단단한 근육과 신체 활력",
         "description": "성장기 근육 형성과 신체 조직 강화에 필수적인 단백질을 공급받아 힘차게 활동합니다.",
-        "quote": "단백질 파워 충전 완료! 튼튼한 바위산과 건강한 체력을 지켜줄게요."
+        "quote": "단백질 충전 완료! 견고한 바위산과 건강한 체력을 함께 지켜가요."
     },
     "giraffe": {
         "id": "giraffe",
@@ -48,9 +49,9 @@ GUARDIANS = {
         "role": "칼슘 & 골격 수호자",
         "emoji": "🦒",
         "color": "#f1c40f",
-        "title": "쑥쑥 자라는 키와 단단한 뼈",
+        "title": "키 성장과 튼튼한 골격",
         "description": "키 성장과 단단한 치아, 골격 형성을 돕는 칼슘과 비타민D를 지켜줍니다.",
-        "quote": "칼슘이 꽉 찼네요! 키가 쑥쑥 자라고 뼈가 더욱 튼튼해지는 신호예요."
+        "quote": "칼슘이 풍부하게 보충되었습니다! 골격 건강과 성장에 도움이 되는 신호예요."
     },
     "rabbit": {
         "id": "rabbit",
@@ -128,15 +129,15 @@ def determine_guardian(nutrition: Dict[str, Any]) -> Dict[str, Any]:
     best_guardian = GUARDIANS[best_key].copy()
 
     if best_key == "bear":
-        best_guardian["custom_message"] = f"단백질 {protein:.1f}g 섭취! 성장기 뼈와 근육이 튼튼하게 자라나고 있습니다."
+        best_guardian["custom_message"] = f"단백질 {protein:.1f}g 섭취! 근육 합성과 신체 조직 강화에 큰 도움이 됩니다."
     elif best_key == "giraffe":
-        best_guardian["custom_message"] = f"칼슘 {calcium:.1f}mg 충전! 키 성장과 단단한 치아 형성에 큰 힘이 됩니다."
+        best_guardian["custom_message"] = f"칼슘 {calcium:.1f}mg 충전! 키 성장과 골격 형성에 큰 도움이 됩니다."
     elif best_key == "parrot":
         best_guardian["custom_message"] = f"비타민 C {vit_c:.1f}mg 공급! 상큼한 활력으로 피로를 깨끗이 씻어내요."
     elif best_key == "rabbit":
         best_guardian["custom_message"] = f"식이섬유 {fiber:.1f}g 섭취! 소화가 원활해지고 장 건강이 강화됩니다."
     else:
-        best_guardian["custom_message"] = f"활동 에너지 {carbs:.1f}g 충전! 오늘 하루 신체 활동과 학업에 집중할 수 있어요."
+        best_guardian["custom_message"] = f"활동 에너지 {carbs:.1f}g 충전! 오늘 하루 신체 활동과 일상에 집중할 수 있어요."
 
     return best_guardian
 
@@ -162,58 +163,58 @@ def calculate_island_environment(cumulative_nutrition: Dict[str, Any], meal_coun
         sun_desc = "아직 식단이 기록되기 전의 평화롭고 따스한 기본 햇살이 섬을 비추고 있습니다."
     elif carb_ratio < 0.6:
         sun_state = "low"
-        sun_desc = "활동 에너지(탄수화물)가 조금 부족하여 해님의 빛이 은은해요. 든든한 통곡물이나 밥을 보충해 보세요."
+        sun_desc = "활동 에너지(탄수화물)가 조금 부족하여 햇빛이 은은합니다. 든든한 통곡물이나 잡곡밥을 보충해 보세요."
     elif carb_ratio > 1.5:
         sun_state = "heat"
-        sun_desc = "열량과 탄수화물이 다소 높아 해님이 이글거려요! 신나게 운동하여 에너지를 발산해 보세요."
+        sun_desc = "열량과 탄수화물이 다소 높아 태양이 과열되었습니다. 가벼운 운동이나 신체 활동으로 에너지를 소비해 보세요."
     else:
         sun_state = "sunny"
-        sun_desc = "적정 에너지를 공급받아 황금빛 해님이 섬 전체를 따스하게 비추고 있습니다!"
+        sun_desc = "적정 에너지를 공급받아 황금빛 태양이 섬 전체를 따스하게 비추고 있습니다."
 
     # 2. 하늘 날씨 & 구름 (당류)
     if meal_count == 0:
         cloud_state = "clear"
-        cloud_desc = "하늘에 몽실몽실 하얀 뭉게구름이 평화롭게 떠다닙니다."
+        cloud_desc = "하늘에 맑고 평화로운 구름이 펼쳐져 있습니다."
     elif sugar_val > (YOUTH_RECOMMENDED["sugar"] * 0.8):
         cloud_state = "storm"
-        cloud_desc = "단순 당류 섭취가 높아 보랏빛 번개구름이 발생했어요! 물을 충분히 마시고 과자 대신 신선한 과일을 선택해 보세요."
+        cloud_desc = "단순 당류 섭취가 높아 먹구름이 발생했습니다. 충분한 수분을 섭취하고 가공 당류 섭취를 조절해 보세요."
     elif sugar_val < 18.0 and meal_count >= 1:
         cloud_state = "rainbow"
-        cloud_desc = "당류 밸런스가 매우 우수합니다! 맑게 갠 하늘에 7색 무지개가 선명하게 떠올랐어요."
+        cloud_desc = "당류 밸런스가 매우 우수합니다! 맑게 갠 하늘에 7색 무지개가 선명하게 떠올랐습니다."
     else:
         cloud_state = "clear"
-        cloud_desc = "하늘에 몽실몽실 하얀 뭉게구름이 평화롭게 떠다닙니다."
+        cloud_desc = "하늘에 맑고 평화로운 구름이 펼쳐져 있습니다."
 
     # 3. 중앙 바위산 (단백질 & 칼슘)
     mountain_score = (protein_ratio + calcium_ratio) / 2
     if meal_count == 0:
         mountain_state = "normal"
-        mountain_desc = "기본 형태의 든든한 바위산입니다. 고기, 생선, 달걀, 우유를 골고루 먹으면 더욱 높고 웅장해지며 황금 수정이 빛납니다!"
+        mountain_desc = "기본 형태의 든든한 바위산입니다. 육류, 생선, 달걀, 콩류를 골고루 섭취하면 더욱 견고해지며 황금 수호석이 빛납니다."
     elif mountain_score >= 0.7:
         mountain_state = "solid"
-        mountain_desc = "단백질과 칼슘이 풍부하여 바위산이 높고 견고하게 솟았으며, 황금 수정이 단단하게 빛납니다!"
+        mountain_desc = "단백질과 칼슘이 풍부하여 바위산이 높고 견고하게 유지되고 있으며 황금 수호석이 빛납니다."
     else:
         mountain_state = "weak"
-        mountain_desc = "단백질과 칼슘이 다소 부족하여 바위산이 낮고 흙언덕 상태입니다. 달걀, 두부, 생선, 우유를 보충해 주면 단단해집니다."
+        mountain_desc = "단백질과 칼슘이 다소 부족합니다. 달걀, 두부, 생선, 유제품을 보충해 주면 견고한 바위산으로 성장합니다."
 
     # 4. 대지 & 꽃밭 (비타민 & 식이섬유)
     if meal_count == 0:
         meadow_state = "normal"
-        meadow_desc = "싱그러운 초록 잔디가 깔린 기본 들판입니다. 신선한 채소와 과일을 먹으면 알록달록 무지개 꽃밭이 만개합니다!"
+        meadow_desc = "푸른 잔디가 깔린 기본 들판입니다. 신선한 채소와 과일을 섭취하면 다채로운 꽃밭이 만개합니다."
     elif vitamin_ratio >= 0.7:
         meadow_state = "blooming"
-        meadow_desc = "비타민과 식이섬유가 듬뿍 공급되어 알록달록 꽃들이 활짝 피고 싱그러운 초록 숲이 우거졌습니다!"
+        meadow_desc = "비타민과 식이섬유가 풍부하게 공급되어 꽃들이 만개하고 싱그러운 초록 숲이 우거졌습니다."
     else:
         meadow_state = "wilted"
-        meadow_desc = "채소와 비타민 섭취가 부족하여 꽃들이 아직 피어나지 못했어요. 신선한 나물이나 채소를 섭취해 보세요."
+        meadow_desc = "채소와 비타민 섭취가 부족하여 꽃들이 아직 피어나지 못했습니다. 신선한 나물이나 채소를 섭취해 보세요."
 
     # 5. 해변 바다 (나트륨)
     if meal_count == 0 or sodium_val <= (YOUTH_RECOMMENDED["sodium"] * 0.75):
         ocean_state = "calm"
-        ocean_desc = "염분 농도가 안정적입니다! 잔잔하고 투명한 에메랄드빛 바다가 모래사장을 부드럽게 감싸고 있어요."
+        ocean_desc = "염분 농도가 안정적입니다! 잔잔하고 투명한 에메랄드빛 바다가 모래사장을 부드럽게 감싸고 있습니다."
     else:
         ocean_state = "flooded"
-        ocean_desc = "나트륨(염분) 섭취가 기준치보다 높아 바닷물이 차오르고 파도가 거세졌어요. 물을 마셔 수분을 조절해 주세요."
+        ocean_desc = "나트륨(염분) 섭취가 기준치보다 높아 바닷물이 차오르고 파도가 거세졌습니다. 수분을 충분히 섭취해 체내 나트륨 농도를 조절해 주세요."
 
     return {
         "sun_state": sun_state,
@@ -339,6 +340,6 @@ def get_next_meal_advice(meal_type: str, current_nutrition: Dict[str, Any]) -> s
     elif prot < 10.0:
         return f"{next_meal}에는 달걀찜이나 생선구이, 두부 요리로 단백질을 보충해 주면 바위산이 더 견고해집니다."
     elif sugar > 15.0:
-        return f"{next_meal} 전까지 물을 1~2컵 천천히 마셔주면 보랏빛 사탕 구름이 빠르게 정화됩니다."
+        return f"{next_meal} 전까지 물을 1~2컵 천천히 마셔주면 먹구름이 빠르게 걷히고 맑아집니다."
     else:
         return f"현재 영양 밸런스가 매우 훌륭합니다! {next_meal}에도 균형 잡힌 식단을 이어가 보세요."

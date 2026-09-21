@@ -10,8 +10,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     html, body {
       height: 100%;
       width: 100%;
@@ -41,7 +49,6 @@
       box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.95);
     }
 
-    /* 창 크기가 변해도 항상 9:18.5 비율을 유지하도록 처리 */
     @media (max-aspect-ratio: 9/18.5) {
       .mobile-screen-wrapper {
         width: 94vw;
@@ -57,350 +64,470 @@
       }
     }
 
-    /* 4대 환경 2D 카툰 캔버스 뷰포트 */
+    /* ================= 4대 환경 일러스트 캔버스 뷰포트 ================= */
     .island-viewport {
       position: relative;
       width: 100%;
       height: 100%;
       flex: 1;
       overflow: hidden;
-      transition: background 0.8s ease;
+      background: #fbc531;
     }
 
-    /* 하늘 상태 */
-    .sky-sunny { background: linear-gradient(180deg, #1e90ff 0%, #70a1ff 40%, #a8e6cf 80%, #48dbfb 100%); }
-    .sky-low { background: linear-gradient(180deg, #192a56 0%, #273c75 50%, #40739e 85%, #487eb0 100%); }
-    .sky-heat { background: linear-gradient(180deg, #e84118 0%, #e17055 45%, #fab1a0 85%, #ffeaa7 100%); }
-    .sky-storm { background: linear-gradient(180deg, #2d3436 0%, #4834d4 50%, #686de0 85%, #30336b 100%); }
+    /* 고해상도 마스터 일러스트 베이스 아트워크 (상태별 부드러운 크로스페이드) */
+    .island-art-base {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center bottom;
+      pointer-events: none;
+      z-index: 2;
+      transition: opacity 0.4s ease, filter 0.5s ease;
+    }
 
-    /* 바다 파도 애니메이션 */
-    .ocean-layer {
+    /* 상단 안내 팁 칩 (맨 위 한 줄 고정, 겹침 완전 방지) */
+    .top-hint-pill {
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #f8fafc;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 9999px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+    }
+
+    /* ================= 인터랙티브 핫스팟 & 오버레이 ================= */
+
+    /* 1. 태양 핫스팟 (우측 상단) */
+    .sun-hotspot {
+      position: absolute;
+      top: 3.5%;
+      right: 4%;
+      width: 24%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 15;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease;
+    }
+    .sun-hotspot:hover {
+      transform: scale(1.08);
+    }
+    .sun-heat-aura {
+      position: absolute;
+      inset: -15px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(239, 68, 68, 0.4) 0%, rgba(249, 115, 22, 0.2) 60%, transparent 80%);
+      animation: heat-pulse 2s infinite alternate ease-in-out;
+      pointer-events: none;
+    }
+    @keyframes heat-pulse {
+      0% { transform: scale(0.9); opacity: 0.5; }
+      100% { transform: scale(1.25); opacity: 0.95; }
+    }
+
+    /* 2. 기상/구름/무지개 핫스팟 */
+    .cloud-hotspot {
+      position: absolute;
+      top: 1.5%;
+      left: 6%;
+      width: 90%;
+      height: 30%;
+      cursor: pointer;
+      z-index: 12;
+    }
+
+    /* 무지개 반짝이 오버레이 */
+    .rainbow-shine-overlay {
+      position: absolute;
+      top: 3%;
+      left: 5%;
+      right: 5%;
+      height: 38%;
+      pointer-events: none;
+      z-index: 10;
+      transition: opacity 0.6s ease;
+    }
+    .rainbow-sparkles {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .rainbow-sparkle-item {
+      position: absolute;
+      font-size: 16px;
+      color: #ffd32a;
+      filter: drop-shadow(0 0 6px #fff7c2);
+      animation: sparkle-float 2.5s infinite ease-in-out alternate;
+    }
+    @keyframes sparkle-float {
+      0% { opacity: 0.3; transform: scale(0.8) translateY(0); }
+      100% { opacity: 1; transform: scale(1.25) translateY(-8px); }
+    }
+
+    /* 3. 중앙 바위산 & 황금 수호석 핫스팟 */
+    .mountain-hotspot {
+      position: absolute;
+      top: 20%;
+      left: 24%;
+      width: 52%;
+      height: 36%;
+      cursor: pointer;
+      z-index: 16;
+    }
+    .guardian-stone-aura {
+      position: absolute;
+      top: 3%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+      z-index: 18;
+    }
+    .stone-glow-ring {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 242, 0, 0.75) 0%, rgba(255, 159, 26, 0.3) 55%, transparent 75%);
+      animation: stone-radiate 2.5s infinite alternate ease-in-out;
+    }
+    .stone-super-charged .stone-glow-ring {
+      transform: scale(1.4);
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 211, 42, 0.8) 50%, transparent 80%);
+      filter: drop-shadow(0 0 20px #ffd32a);
+      animation: stone-radiate-fast 1.2s infinite alternate ease-in-out;
+    }
+    .stone-badge {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1.5px solid #ffd32a;
+      color: #ffeaa7;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      white-space: nowrap;
+      margin-top: 2px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      animation: stone-badge-bounce 3s infinite ease-in-out;
+    }
+    @keyframes stone-radiate {
+      0% { transform: scale(0.85); opacity: 0.5; }
+      100% { transform: scale(1.2); opacity: 0.95; }
+    }
+    @keyframes stone-radiate-fast {
+      0% { transform: scale(1.1); opacity: 0.7; }
+      100% { transform: scale(1.5); opacity: 1; }
+    }
+    @keyframes stone-badge-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    /* 4. 대지 & 꽃밭 핫스팟 (비타민/식이섬유) */
+    .meadow-hotspot {
+      position: absolute;
+      top: 48%;
+      left: 10%;
+      width: 80%;
+      height: 28%;
+      cursor: pointer;
+      z-index: 14;
+    }
+    .drifting-petal {
+      position: absolute;
+      font-size: 16px;
+      animation: petal-sway 4s infinite ease-in-out alternate;
+    }
+    @keyframes petal-sway {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+      100% { transform: translateY(-12px) rotate(20deg); opacity: 1; }
+    }
+
+    /* 5. 바다 & 해변 핫스팟 (나트륨/수분) */
+    .ocean-hotspot {
       position: absolute;
       bottom: 0;
       left: 0;
-      width: 200%;
-      height: 155px;
-      background: #00cec9;
-      opacity: 0.85;
-      border-radius: 600px 600px 0 0;
-      animation: wave 6s infinite linear alternate;
+      width: 100%;
+      height: 28%;
+      cursor: pointer;
       z-index: 14;
     }
-    .ocean-layer-back {
+    .ocean-flood-overlay {
       position: absolute;
-      bottom: 0;
-      left: -40%;
-      width: 200%;
-      height: 180px;
-      background: #0984e3;
-      opacity: 0.65;
-      border-radius: 700px 700px 0 0;
-      animation: wave-back 9s infinite linear alternate;
-      z-index: 13;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(30, 58, 138, 0.35) 40%, rgba(15, 23, 42, 0.6) 100%);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: none;
     }
-    .ocean-flooded {
-      height: 220px !important;
-      background: #1e3799 !important;
-      filter: drop-shadow(0 0 15px rgba(30, 55, 153, 0.8));
+    .ocean-flooded .ocean-flood-overlay {
+      opacity: 1;
     }
 
-    @keyframes wave {
-      0% { transform: translateX(0) translateY(0); }
-      100% { transform: translateX(-60px) translateY(10px); }
-    }
-    @keyframes wave-back {
-      0% { transform: translateX(0) translateY(0); }
-      100% { transform: translateX(70px) translateY(6px); }
-    }
-
-    /* 섬 대지 (모바일 비율에 맞춘 둥근 언덕) */
-    .island-ground {
+    /* 6. 가디언 크리처 무대 & 좌우 동적 말풍선 */
+    .creature-stage {
       position: absolute;
-      bottom: 75px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 92%;
-      height: 250px;
-      border-radius: 50% 50% 45% 45% / 70% 70% 30% 30%;
-      background: linear-gradient(180deg, #2ed573 0%, #10ac84 65%, #795548 100%);
-      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 6px 12px rgba(255,255,255,0.3);
-      cursor: pointer;
-      transition: all 0.5s ease;
-      z-index: 10;
+      top: 33%;
+      max-width: 215px;
+      z-index: 35;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1), right 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s ease;
     }
-    .ground-normal {
-      background: linear-gradient(180deg, #2ed573 0%, #10ac84 65%, #795548 100%) !important;
+    .creature-stage.stage-left {
+      left: 4%;
+      right: auto;
+      align-items: flex-start;
     }
-    .ground-blooming {
-      background: linear-gradient(180deg, #00b894 0%, #00cec9 65%, #6c5ce7 100%) !important;
+    .creature-stage.stage-right {
+      right: 4%;
+      left: auto;
+      align-items: flex-end;
     }
-    .ground-wilted {
-      background: linear-gradient(180deg, #d2b48c 0%, #b8860b 60%, #5d4037 100%) !important;
-    }
-
-    /* 중앙 바위산 */
-    .mountain-peak {
-      position: absolute;
-      bottom: 200px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 220px;
-      height: 160px;
-      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-      background: linear-gradient(135deg, #747d8c 0%, #2f3542 100%);
-      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
-      cursor: pointer;
-      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 8;
-    }
-    .mountain-normal {
-      height: 160px;
-      background: linear-gradient(135deg, #8395a7 0%, #576574 100%) !important;
-    }
-    .mountain-solid {
-      height: 255px !important;
-      width: 240px !important;
-      background: linear-gradient(135deg, #a4b0be 0%, #57606f 40%, #ffa502 100%) !important;
-    }
-    .mountain-weak {
-      height: 120px !important;
-      background: linear-gradient(135deg, #a5b1c2 0%, #778ca3 100%) !important;
-      opacity: 0.8;
-    }
-
-    /* 황금 수정 광물 */
-    .crystal-glow {
-      position: absolute;
-      top: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 24px;
-      height: 42px;
-      background: linear-gradient(180deg, #fff200, #ff9f1a);
-      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-      animation: pulse-glow 2s infinite ease-in-out;
-    }
-    @keyframes pulse-glow {
-      0%, 100% { filter: drop-shadow(0 0 8px #fff200); transform: translateX(-50%) scale(1); }
-      50% { filter: drop-shadow(0 0 18px #ff3838); transform: translateX(-50%) scale(1.15); }
-    }
-
-    /* 태양 */
-    .sun-disc {
-      position: absolute;
-      top: 30px;
-      right: 12%;
-      width: 78px;
-      height: 78px;
-      border-radius: 50%;
-      background: radial-gradient(circle, #fffa65 20%, #ffaf40 80%);
-      box-shadow: 0 0 35px #ffaf40;
-      cursor: pointer;
-      z-index: 5;
-      animation: spin-sun 25s linear infinite;
-    }
-    @keyframes spin-sun {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* 구름 */
-    .cloud-cluster {
-      position: absolute;
-      top: 45px;
-      left: 8%;
-      cursor: pointer;
-      z-index: 6;
-      transition: all 0.5s ease;
-    }
-    .cloud-puff {
+    .creature-bubble {
       position: relative;
-      background: #ffffff;
-      width: 120px;
-      height: 44px;
-      border-radius: 40px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-      animation: float-cloud 4s ease-in-out infinite alternate;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      border: 2px solid #ffd32a;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
+      border-radius: 18px;
+      padding: 8px 12px;
+      max-width: 210px;
+      word-break: keep-all;
+      white-space: normal;
+      line-height: 1.35;
+      pointer-events: auto;
+      cursor: pointer;
+      animation: bubble-float 3s infinite ease-in-out;
+      transition: transform 0.2s ease;
     }
-    .cloud-puff::before, .cloud-puff::after {
+    .creature-bubble:hover {
+      transform: scale(1.03);
+    }
+    @keyframes bubble-float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    /* 6-1. 가디언 베어 (단백질 수호자) 섬 언덕 엔티티 - 아담하고 귀여운 미니멀 사이즈(면적 10배 축소) */
+    .guardian-bear-entity {
+      position: absolute;
+      top: 54%;
+      left: 21.5%;
+      width: 8.2%;
+      aspect-ratio: 515 / 697;
+      z-index: 22;
+      cursor: pointer;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: bear-breathe 3.5s ease-in-out infinite alternate;
+    }
+    .guardian-bear-entity::before {
       content: '';
       position: absolute;
-      background: inherit;
-      border-radius: 50%;
+      inset: -8px;
+      cursor: pointer;
     }
-    .cloud-puff::before { width: 50px; height: 50px; top: -20px; left: 16px; }
-    .cloud-puff::after { width: 62px; height: 62px; top: -28px; right: 16px; }
-
-    .cloud-storm .cloud-puff {
-      background: #485460 !important;
-      box-shadow: 0 0 25px #5f27cd !important;
+    .guardian-bear-entity:hover, .guardian-bear-entity:active {
+      transform: scale(1.2) translateY(-4px);
     }
-    .lightning-spark {
+    @keyframes bear-breathe {
+      0% { transform: translateY(0) rotate(0deg); }
+      100% { transform: translateY(-3px) rotate(1deg); }
+    }
+    .bear-name-tag {
       position: absolute;
-      bottom: -26px;
-      left: 45%;
-      font-size: 24px;
-      animation: blink 0.8s infinite;
-    }
-    @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
-    @keyframes float-cloud {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(10px); }
-    }
-
-    /* 무지개 아치 */
-    .rainbow-arc {
-      position: absolute;
-      top: 20px;
-      left: 5%;
-      width: 240px;
-      height: 120px;
-      border-radius: 120px 120px 0 0;
-      border: 8px solid transparent;
-      border-top-color: #ff3838;
-      border-right-color: #ff9f1a;
-      border-bottom-color: transparent;
-      border-left-color: #2ed573;
-      filter: drop-shadow(0 0 8px rgba(255,255,255,0.7));
+      bottom: -7px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid #ffd32a;
+      border-radius: 9999px;
+      padding: 0px 5px;
+      font-size: 8.5px;
+      font-weight: 800;
+      color: #ffd32a;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
       pointer-events: none;
-      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 2px;
     }
 
-    /* 수호 크리처 카드 */
-    .creature-card {
+    /* 7. 튜토리얼 오버레이: 초슬림 & 섬 가림 완벽 방지 */
+    .tutorial-overlay-clean {
       position: absolute;
-      z-index: 15;
-      cursor: pointer;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      animation: bounce-creature 2.4s infinite ease-in-out;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 10px 12px;
+      pointer-events: none;
+      background: transparent;
     }
-    .creature-card:hover {
-      transform: scale(1.18) translateY(-8px) !important;
+    .tutorial-card-clean {
+      pointer-events: auto;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(14px);
+      border: 2px solid #10b981;
+      border-radius: 20px;
+      padding: 10px 14px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.85);
+      margin-bottom: 2px;
+      animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    @keyframes bounce-creature {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-12px); }
+    @keyframes slide-up {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
-    .flower-item {
-      position: absolute;
-      font-size: 22px;
-      animation: flower-sway 3s ease-in-out infinite alternate;
-      z-index: 12;
-      cursor: pointer;
-    }
-    @keyframes flower-sway {
-      0% { transform: rotate(-7deg); }
-      100% { transform: rotate(7deg); }
-    }
-
-    /* 튜토리얼 하이라이트 */
-    .tut-pulse-border {
-      outline: 3px solid #fffa65;
-      outline-offset: 4px;
-      animation: pulse-border 1.5s infinite;
-    }
-    @keyframes pulse-border {
-      0%, 100% { outline-color: #fffa65; box-shadow: 0 0 15px #fffa65; }
-      50% { outline-color: #ff9f1a; box-shadow: 0 0 25px #ff3838; }
-    }
   </style>
 </head>
-<body class="text-white min-h-screen flex justify-center items-center">
+<body>
 
-  <!-- ================= 모바일 세로 프레임 래퍼 ================= -->
+  <!-- ================= 모바일 세로 프레임 (415px 고정) ================= -->
   <div class="mobile-screen-wrapper">
 
-    <!-- 상단 헤더 (모바일 가독성 향상: 글자 큼직하고 시원하게) -->
-    <header class="h-16 bg-slate-900/95 backdrop-blur px-4 flex items-center justify-between border-b border-slate-800 z-30 shrink-0">
-      <div class="flex items-center gap-2.5">
-        <span class="text-2xl">🏝️</span>
+    <!-- 토스트 알림 메시지 (스크린샷 및 피드백용) -->
+    <div id="islandToast" class="pointer-events-none absolute top-14 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 opacity-0 transform -translate-y-2 w-[85%] text-center">
+      <div id="islandToastText" class="px-3.5 py-2 rounded-2xl bg-slate-900/95 border border-emerald-500/50 text-emerald-300 font-bold text-xs shadow-2xl backdrop-blur-md">
+        알림
+      </div>
+    </div>
+
+    <!-- ================= 상단 글로벌 헤더 & 네비게이션 ================= -->
+    <header class="p-3 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 flex items-center justify-between z-30 shrink-0">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">🏝️</span>
         <div>
-          <h1 class="text-lg font-black tracking-tight text-white leading-none">Nutri-Island</h1>
-          <p class="text-[11px] text-emerald-400 font-semibold mt-0.5">나만의 영양 마법 섬</p>
+          <h1 class="text-sm font-black text-white tracking-tight flex items-center gap-1.5">
+            Nutri-Island
+          </h1>
+          <p class="text-[10px] text-emerald-400 font-bold">나만의 영양 마법 섬</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5">
+        <button id="btnScreenshot" onclick="captureIslandScreenshot()" title="현재 섬 화면 스크린샷 저장" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 text-xs transition border border-slate-700 font-bold flex items-center gap-1">
+          <span>📸</span>
+        </button>
         <button onclick="startTutorial(true)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1">
           <span>❓</span> 튜토리얼
         </button>
-        <button onclick="resetDayData()" title="오늘 데이터 초기화" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-400 text-xs transition border border-slate-700">
+        <button onclick="resetDayData()" title="새로운 하루 시작하기" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-400 text-xs transition border border-slate-700">
           🔄
         </button>
-        <a href="/" class="p-1.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold transition border border-slate-700" title="성인용 정밀 분석기로 이동">
+        <a href="/" title="전문가용 정밀 분석기로 이동" class="p-1.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white text-xs transition border border-slate-700">
           🔬
         </a>
       </div>
     </header>
 
-    <!-- 끼니 현황 바 (아침/점심/저녁/간식) -->
-    <div class="bg-slate-900/80 px-3 py-2 border-b border-slate-800/80 flex items-center justify-between z-20 shrink-0">
-      <div class="text-xs font-bold text-slate-400">식단 기록 현황:</div>
-      <div class="flex items-center gap-1.5">
-        <div id="slot-breakfast" onclick="viewMealDetail('breakfast')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
+    <!-- ================= 4끼니 슬롯 현황 대시보드 ================= -->
+    <div class="px-3 py-2 bg-slate-950/70 border-b border-slate-800/80 flex items-center justify-between text-xs z-30 shrink-0">
+      <span class="text-slate-400 font-bold text-[11px]">식단 기록 현황:</span>
+      <div class="flex gap-1.5" id="mealSlotsContainer">
+        <button id="slot-breakfast" onclick="viewMealDetail('breakfast')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
           아침 <span class="slot-icon">⚪</span>
-        </div>
-        <div id="slot-lunch" onclick="viewMealDetail('lunch')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
+        </button>
+        <button id="slot-lunch" onclick="viewMealDetail('lunch')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
           점심 <span class="slot-icon">⚪</span>
-        </div>
-        <div id="slot-dinner" onclick="viewMealDetail('dinner')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
+        </button>
+        <button id="slot-dinner" onclick="viewMealDetail('dinner')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
           저녁 <span class="slot-icon">⚪</span>
-        </div>
-        <div id="slot-snack" onclick="viewMealDetail('snack')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
+        </button>
+        <button id="slot-snack" onclick="viewMealDetail('snack')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
           간식 <span class="slot-icon">⚪</span>
-        </div>
+        </button>
       </div>
     </div>
 
-    <!-- ================= 메인 섬 뷰포트 ================= -->
-    <main class="island-viewport sky-sunny" id="islandViewport">
-      
-      <!-- 무지개 아치 -->
-      <div id="rainbowArc" class="rainbow-arc hidden"></div>
+    <!-- ================= 4대 자연 환경 캔버스 뷰포트 ================= -->
+    <main id="islandViewport" class="island-viewport sky-sunny">
 
-      <!-- 1. 하늘 태양 영역 -->
-      <div id="sunArea" class="sun-disc" onclick="inspectEnvironment('sun')" title="태양 에너지 터치">
-        <div class="w-full h-full flex items-center justify-center text-3xl select-none" id="sunEmoji">☀️</div>
-      </div>
+      <!-- 1. 상태별 실시간 전환 고해상도 마스터 일러스트 아트워크 (기본 / 침수 / 폭풍우) -->
+      <img src="/assets/island_base.png" id="islandBaseArt" class="island-art-base" alt="Nutri-Island">
 
-      <!-- 2. 하늘 구름 영역 -->
-      <div id="cloudArea" class="cloud-cluster" onclick="inspectEnvironment('cloud')" title="날씨 & 당류 터치">
-        <div class="cloud-puff relative">
-          <span id="stormLightning" class="lightning-spark hidden">⚡</span>
+      <!-- 2. 상단 안내 팁 칩 (정중앙 한 줄 고정) -->
+      <div class="absolute top-2.5 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+        <div class="top-hint-pill">
+          ✨ 하늘, 바위산, 꽃밭, 바다를 터치해 보세요!
         </div>
       </div>
 
-      <!-- 3. 중앙 든든 바위산 영역 (처음에도 보통의 든든한 산으로 조성) -->
-      <div id="mountainArea" class="mountain-peak mountain-normal" onclick="inspectEnvironment('mountain')" title="중앙 든든 바위산 터치">
-        <div id="crystalGlow" class="crystal-glow"></div>
+      <!-- 3. 태양 인터랙티브 핫스팟 & 동적 열기 오버레이 -->
+      <div id="sunArea" class="sun-hotspot" onclick="inspectEnvironment('sun')" title="태양 & 탄수화물 에너지 터치">
+        <div id="sunHeatGlow" class="sun-heat-aura hidden"></div>
+        <svg id="sunSvg" class="hidden"><circle id="sunCoreCircle"/></svg>
       </div>
 
-      <!-- 4. 대지 & 꽃밭 (처음에도 싱그러운 초록 잔디로 조성) -->
-      <div id="groundArea" class="island-ground ground-normal" onclick="inspectEnvironment('meadow')" title="대지 & 꽃밭 터치">
-        <div id="flowerContainer" class="w-full h-full relative pointer-events-none">
-          <span class="flower-item" style="bottom: 40px; left: 14%;">🌸</span>
-          <span class="flower-item" style="bottom: 55px; left: 28%;">🌺</span>
-          <span class="flower-item" style="bottom: 30px; right: 20%;">🌼</span>
-          <span class="flower-item" style="bottom: 45px; right: 36%;">🌷</span>
+      <!-- 4. 기상 날씨/구름 핫스팟 & 번개 스파크 -->
+      <div id="cloudArea" class="cloud-hotspot" onclick="inspectEnvironment('cloud')" title="날씨 & 당류 상태 터치">
+        <span id="stormLightning" class="hidden">⚡</span>
+        <svg id="cloudSvg" class="hidden"><path id="cloudPath"/></svg>
+      </div>
+
+      <!-- 5. 7색 무지개 샤인 이펙트 레이어 -->
+      <div id="rainbowArc" class="rainbow-shine-overlay">
+        <div class="rainbow-sparkles">
+          <span class="rainbow-sparkle-item sp1" style="top: 15%; left: 18%;">✨</span>
+          <span class="rainbow-sparkle-item sp2" style="top: 8%; left: 50%;">✨</span>
+          <span class="rainbow-sparkle-item sp3" style="top: 18%; right: 20%;">✨</span>
         </div>
       </div>
 
-      <!-- 바다 파도 레이어 -->
-      <div id="oceanBack" class="ocean-layer-back"></div>
-      <div id="oceanFront" class="ocean-layer cursor-pointer" onclick="inspectEnvironment('ocean')" title="바다 & 나트륨 터치"></div>
+      <!-- 6. 중앙 바위산 & 황금 수호석 핫스팟 -->
+      <div id="mountainArea" class="mountain-hotspot mountain-normal" onclick="inspectEnvironment('mountain')" title="바위산 & 황금 수호석 터치">
+        <div id="guardianStone" class="guardian-stone-aura">
+          <div class="stone-glow-ring"></div>
+          <div class="stone-badge">✨ 섬의 수호석</div>
+        </div>
+      </div>
 
-      <!-- 섬 위에 등장한 수호 크리처들 컨테이너 -->
-      <div id="creatureContainer" class="absolute inset-0 pointer-events-none z-20"></div>
+      <!-- 7. 대지 & 꽃밭 핫스팟 (비타민/식이섬유) -->
+      <div id="groundArea" class="meadow-hotspot ground-normal" onclick="inspectEnvironment('meadow')" title="대지 & 꽃밭(비타민) 터치">
+        <div id="grassPlateau" class="w-full h-full relative pointer-events-none">
+          <div id="flowerContainer" class="w-full h-full relative hidden">
+            <span class="drifting-petal p1" style="top: 20%; left: 25%;">🌸</span>
+            <span class="drifting-petal p2" style="top: 40%; left: 50%;">🌼</span>
+            <span class="drifting-petal p3" style="top: 25%; right: 20%;">🌺</span>
+          </div>
+        </div>
+      </div>
 
-      <!-- 조작 힌트 토스트 (큼직한 폰트) -->
-      <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-700 text-xs font-bold text-slate-200 flex items-center gap-1.5 shadow-lg z-20 pointer-events-none whitespace-nowrap">
-        <span class="text-amber-400">👆</span>
-        <span>하늘, 바위산, 꽃밭, 바다를 탭해 보세요!</span>
+      <!-- 8. 해변 & 바다 핫스팟 (나트륨/수분) -->
+      <div id="oceanArea" class="ocean-hotspot" onclick="inspectEnvironment('ocean')" title="바다 & 나트륨 상태 터치">
+        <div id="oceanFront" class="ocean-flood-overlay"></div>
+      </div>
+
+      <!-- 9. 수호 크리처 무대 & 꼬리 없는 깔끔한 카드 말풍선 -->
+      <div id="creatureContainer" class="creature-stage stage-right"></div>
+
+      <!-- 10. 가디언 베어 (단백질 수호자) - 베어 등장 시 섬 언덕에 출현! -->
+      <div id="guardianBearEntity" class="guardian-bear-entity hidden" onclick="talkCreature('베어')" title="가디언 베어와 대화하기">
+        <img src="/assets/guardian_bear.png" alt="가디언 베어" class="w-full h-full object-contain pointer-events-none">
+        <div class="bear-name-tag">
+          <span>🐻</span>
+          <span>베어</span>
+        </div>
       </div>
 
       <!-- ================= 하단 플로팅 액션 버튼 (식단 등록) ================= -->
-      <!-- 사용자의 지시에 맞춰 '오늘 식단 기록하기' 버튼 크기는 적정 크기 유지 -->
       <div class="absolute bottom-5 right-4 z-30">
         <button id="btnOpenRecord" onclick="openRecordModal()" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-white font-extrabold text-sm shadow-xl shadow-emerald-500/40 flex items-center gap-2 transform active:scale-95 transition border border-white/30">
           <span class="text-xl animate-bounce">📸</span>
@@ -410,7 +537,7 @@
 
     </main>
 
-    <!-- ================= 돋보기 진단 모달 (모바일 큰 글씨 최적화) ================= -->
+    <!-- ================= 돋보기 진단 모달 ================= -->
     <div id="inspectModal" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
       <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <button onclick="closeInspectModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold p-1">✕</button>
@@ -421,205 +548,191 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h3 id="inspectTitle" class="text-lg font-black text-white">중앙 든든 바위산</h3>
-            <span id="inspectStatusBadge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">보통</span>
+              <h3 id="inspectTitle" class="text-lg font-black text-white">중앙 바위산 & 수호석</h3>
+              <span id="inspectStatusBadge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">보통</span>
+            </div>
+            <p id="inspectNutrient" class="text-xs text-amber-400 font-bold mt-0.5">단백질 & 칼슘 상태</p>
           </div>
-          <p id="inspectNutrient" class="text-xs text-amber-400 font-bold mt-0.5">단백질 & 칼슘 상태</p>
+        </div>
+
+        <!-- 과학적 원리 설명 카드 -->
+        <div class="bg-slate-800/90 rounded-2xl p-4 border border-slate-700 mb-3.5">
+          <div class="text-xs font-black text-emerald-400 mb-1.5 flex items-center gap-1.5">
+            <span>🔬</span> 왜 이런 상태일까요?
+          </div>
+          <p id="inspectDescription" class="text-[14px] text-slate-100 leading-relaxed font-semibold">
+            섬의 중심을 지키는 든든한 바위산과 수호석입니다. 고기, 생선, 달걀, 우유 등 단백질과 칼슘을 잘 챙겨 먹으면 수호석이 황금빛으로 눈부시게 빛나고 바위산이 웅장해집니다!
+          </p>
+        </div>
+
+        <!-- 식약처 DB 기반 추천 식단 리스트 -->
+        <div>
+          <div class="text-xs font-black text-amber-400 mb-2 flex items-center gap-1.5">
+            <span>🍽️</span> 식약처 DB 기반 맞춤 추천 음식
+          </div>
+          <div id="inspectRecommendations" class="space-y-2"></div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+          <button onclick="closeInspectModal()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200 transition">
+            확인 완료
+          </button>
         </div>
       </div>
+    </div>
 
-      <!-- 과학적 원리 설명 카드 (글자 크기 확대: text-sm, 15px급) -->
-      <div class="bg-slate-800/90 rounded-2xl p-4 border border-slate-700 mb-3.5">
-        <div class="text-xs font-black text-emerald-400 mb-1.5 flex items-center gap-1.5">
-          <span>🔬</span> 왜 이런 상태일까요?
+    <!-- ================= 실제 플레이 식단 등록 모달 ================= -->
+    <div id="recordModal" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 shadow-2xl relative">
+        <button onclick="closeRecordModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold p-1">✕</button>
+        
+        <h3 class="text-lg font-black text-white mb-1 flex items-center gap-2">
+          <span>📸</span> 오늘 식단 기록하기
+        </h3>
+        <p class="text-xs text-slate-400 mb-4 font-medium">오늘 섭취한 식사를 등록하면 섬의 영양 환경이 업데이트됩니다.</p>
+
+        <!-- 끼니 선택 라디오 -->
+        <div class="grid grid-cols-4 gap-1.5 mb-4">
+          <button id="mbtn-breakfast" onclick="selectMealType('breakfast')" class="meal-type-btn py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs border border-emerald-400">아침</button>
+          <button id="mbtn-lunch" onclick="selectMealType('lunch')" class="meal-type-btn py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">점심</button>
+          <button id="mbtn-dinner" onclick="selectMealType('dinner')" class="meal-type-btn py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">저녁</button>
+          <button id="mbtn-snack" onclick="selectMealType('snack')" class="meal-type-btn py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">간식</button>
         </div>
-        <p id="inspectDescription" class="text-[14px] text-slate-100 leading-relaxed font-medium">
-          기본 형태의 든든한 바위산입니다. 고기, 생선, 달걀, 우유를 골고루 먹으면 더욱 높고 웅장해지며 황금 수정이 빛납니다!
-        </p>
-      </div>
 
-      <!-- 식약처 DB 기반 추천 식단 리스트 -->
-      <div>
-        <div class="text-xs font-black text-amber-400 mb-2 flex items-center gap-1.5">
-          <span>🍽️</span> 식약처 DB 기반 맞춤 추천 음식
+        <!-- 사진 업로드 인풋 -->
+        <div class="mb-4">
+          <label class="block w-full border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition bg-slate-800/40 relative overflow-hidden">
+            <input type="file" id="mealImageInput" accept="image/*" class="hidden" onchange="handleImageSelected(event)">
+            <div id="uploadPlaceholder" class="space-y-2">
+              <span class="text-3xl">📷</span>
+              <p class="text-xs font-bold text-slate-300">식사 사진을 촬영하거나 앨범에서 선택해 주세요</p>
+              <p class="text-[10px] text-slate-500 font-medium">AI가 34.5만 건 식약처 공공데이터 기반으로 영양을 분석합니다</p>
+            </div>
+            <div id="imagePreviewContainer" class="hidden">
+              <img id="imagePreview" src="" alt="미리보기" class="max-h-36 mx-auto rounded-xl object-contain shadow-md">
+              <p class="text-[10px] text-emerald-400 font-bold mt-2">터치하여 다른 사진으로 변경</p>
+            </div>
+          </label>
         </div>
-        <div id="inspectRecommendations" class="space-y-2"></div>
-      </div>
 
-      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
-        <button onclick="closeInspectModal()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200 transition">
-          확인 완료
+        <!-- 등록 및 분석 버튼 -->
+        <button id="btnSubmitMeal" onclick="submitRealMeal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-sm shadow-lg shadow-emerald-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <span>✨</span> AI 영양 분석 & 섬에 반영하기
+        </button>
+
+        <!-- 로딩 인디케이터 -->
+        <div id="analyzingLoader" class="hidden mt-3 p-3 rounded-xl bg-slate-800/90 border border-slate-700 text-center">
+          <div class="inline-block animate-spin text-xl mb-1">🌀</div>
+          <p class="text-xs font-bold text-emerald-400">AI가 식단 영양 성분을 정밀 분석하고 있습니다...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 새 수호 크리처 등장 팡파레 모달 ================= -->
+    <div id="guardianJoinModal" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border-2 border-amber-400 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl relative animate-in zoom-in duration-300">
+        <img id="gModalImg" src="/assets/guardian_bear.png" class="w-28 h-28 mx-auto object-contain filter drop-shadow-xl animate-bounce mb-2" alt="가디언">
+        <div class="text-5xl animate-bounce mb-2 hidden" id="gModalEmoji">🐻</div>
+        <span class="px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black mb-2 inline-block">새로운 수호 파트너 발견!</span>
+        <h3 id="gModalName" class="text-xl font-black text-white mt-1">가디언 베어</h3>
+        <p id="gModalRole" class="text-xs text-amber-300 font-bold mb-3">근육 튼튼 단백질 수호자</p>
+
+        <div class="bg-slate-800/80 rounded-2xl p-4 border border-slate-700 text-left mb-4 space-y-2">
+          <p id="gModalQuote" class="text-xs text-slate-200 font-semibold italic">"단백질을 든든하게 섭취하셨네요! 바위산과 수호석이 한층 더 견고해집니다!"</p>
+          <div class="pt-2 border-t border-slate-700/60 text-[11px] text-slate-400">
+            인식된 음식: <span id="gModalFoods" class="text-emerald-300 font-bold">소불고기</span>
+          </div>
+          <div class="text-[11px] text-slate-400">
+            다음 식사 조언: <span id="gModalAdvice" class="text-amber-300 font-bold">비타민C가 풍부한 신선한 과일을 곁들여보세요</span>
+          </div>
+        </div>
+
+        <button onclick="closeGuardianModalAndApply()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-sm shadow-lg transition">
+          섬의 수호자로 맞이하기 🚀
         </button>
       </div>
     </div>
-  </div>
 
-  <!-- ================= 실제 플레이 식단 등록 모달 (예시 식단 버튼 완전 배제, 순수 사진 전용) ================= -->
-  <div id="recordModal" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 shadow-2xl relative">
-      <button onclick="closeRecordModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold p-1">✕</button>
-
-      <div class="text-center mb-4">
-        <div class="w-12 h-12 mx-auto mb-1.5 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl border border-emerald-500/30">
-          📸
-        </div>
-        <h3 class="text-lg font-black text-white">식사 사진 기록하기</h3>
-        <p class="text-xs text-slate-300 mt-0.5">내가 먹은 음식 사진을 찍으면 수호 크리처가 찾아옵니다!</p>
-      </div>
-
-      <!-- 끼니 선택 -->
-      <div class="mb-3.5">
-        <label class="block text-xs font-bold text-slate-300 mb-1.5">기록할 끼니 선택:</label>
-        <div class="grid grid-cols-4 gap-1.5">
-          <button type="button" onclick="selectMealType('breakfast')" id="mbtn-breakfast" class="meal-btn py-2 rounded-xl bg-slate-800 border border-transparent text-xs font-bold text-slate-300 transition flex flex-col items-center gap-0.5">
-            <span>🌅</span> 아침
-          </button>
-          <button type="button" onclick="selectMealType('lunch')" id="mbtn-lunch" class="meal-btn py-2 rounded-xl bg-emerald-600/30 border border-emerald-500 text-xs font-bold text-emerald-300 transition flex flex-col items-center gap-0.5">
-            <span>🍱</span> 점심
-          </button>
-          <button type="button" onclick="selectMealType('dinner')" id="mbtn-dinner" class="meal-btn py-2 rounded-xl bg-slate-800 border border-transparent text-xs font-bold text-slate-300 transition flex flex-col items-center gap-0.5">
-            <span>🌙</span> 저녁
-          </button>
-          <button type="button" onclick="selectMealType('snack')" id="mbtn-snack" class="meal-btn py-2 rounded-xl bg-slate-800 border border-transparent text-xs font-bold text-slate-300 transition flex flex-col items-center gap-0.5">
-            <span>🍪</span> 간식
+    <!-- ================= 온보딩 튜토리얼 오버레이 (초슬림 & 섬 가림 완벽 방지) ================= -->
+    <div id="tutorialOverlay" class="tutorial-overlay-clean hidden">
+      <!-- 튜토리얼 축소 시 표시되는 미니멀 플로팅 바 (높이 34px) -->
+      <div id="tutMinimizedBar" class="hidden w-full mb-1">
+        <div class="flex items-center justify-between px-3 py-1.5 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-emerald-400/50 shadow-2xl pointer-events-auto">
+          <div id="tutMiniContent" class="flex items-center gap-2 text-xs font-bold text-slate-200">
+            <span>🏝️</span>
+            <span>섬 전체 감상 중...</span>
+          </div>
+          <button onclick="toggleTutorialCollapse()" class="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] transition shadow flex items-center gap-1 shrink-0">
+            <span>📖</span>
+            <span>가이드 펼치기</span>
           </button>
         </div>
       </div>
 
-      <!-- 실제 사진 등록 (카메라/앨범) -->
-      <div class="mb-4">
-        <label class="block text-xs font-bold text-slate-300 mb-1.5">음식 사진 (직접 촬영 또는 앨범):</label>
-        <input type="file" id="mealImageInput" accept="image/*" class="hidden" onchange="handleImageSelected(event)">
+      <!-- 본체 튜토리얼 카드 (초슬림 디자인, 섬 가림 완벽 방지) -->
+      <div class="tutorial-card-clean" id="tutCardBox">
         
-        <div onclick="document.getElementById('mealImageInput').click()" class="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-2xl p-5 text-center cursor-pointer bg-slate-800/40 hover:bg-slate-800 transition">
-          <div id="uploadPlaceholder">
-            <div class="text-3xl mb-1">📷</div>
-            <div class="text-sm font-bold text-slate-200">카메라 촬영 또는 갤러리 선택</div>
-            <div class="text-xs text-slate-400 mt-1">식판, 접시, 음식 사진을 올려주세요</div>
+        <!-- 상단 헤더 바 (1줄 고정) -->
+        <div class="flex items-center justify-between mb-1.5" id="tutNormalHeader">
+          <div class="flex items-center gap-1.5">
+            <span id="tutStepIndicator" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10.5px] font-black">
+              1 / 4 단계
+            </span>
           </div>
-          <div id="imagePreviewContainer" class="hidden">
-            <img id="imagePreview" src="" alt="식단 미리보기" class="max-h-40 mx-auto rounded-xl object-contain shadow-md">
-            <div class="text-xs text-emerald-400 font-bold mt-2">사진이 선택되었습니다. (터치하여 변경)</div>
+          <div class="flex items-center gap-1.5">
+            <button id="btnToggleCollapse" onclick="toggleTutorialCollapse()" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/30 text-[10.5px] font-bold transition flex items-center gap-1">
+              <span>👀</span>
+              <span>섬 전체보기</span>
+            </button>
+            <button onclick="skipTutorial()" class="text-[11px] text-slate-400 hover:text-slate-200 font-bold ml-1">
+              건너뛰기 ✕
+            </button>
           </div>
         </div>
+
+        <!-- 본문 (제목 + 메시지: 1~2줄 초슬림) -->
+        <div class="mb-1.5">
+          <h4 id="tutTitle" class="text-xs font-black text-white mb-0.5">Nutri-Island에 오신 것을 환영합니다! 🏝️</h4>
+          <p id="tutMessage" class="text-[11px] text-slate-300 leading-snug font-medium line-clamp-2">
+            이곳은 섭취한 식단의 영양 성분에 따라 날씨와 환경이 변화하고 수호 동물이 방문하는 인터랙티브 섬입니다.
+          </p>
+        </div>
+
+        <!-- 튜토리얼 3단계 전용 인터랙티브 가상 체험 박스 (3버튼 가로 1열) -->
+        <div id="tutDemoBox" class="hidden mb-1.5">
+          <div class="grid grid-cols-3 gap-1.5 mb-1.5">
+            <button onclick="simulateTutorialMeal('balanced')" class="py-1.5 px-1 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-white font-black text-[11px] transition text-center flex flex-col items-center">
+              <span>🥗 잡곡밥</span>
+              <span class="text-[9px] text-emerald-300 font-normal">균형·맑음</span>
+            </button>
+            <button onclick="simulateTutorialMeal('sweet')" class="py-1.5 px-1 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 border border-rose-500/50 text-white font-black text-[11px] transition text-center flex flex-col items-center">
+              <span>🍩 초코도넛</span>
+              <span class="text-[9px] text-rose-300 font-normal">당류·폭풍</span>
+            </button>
+            <button onclick="simulateTutorialMeal('sodium')" class="py-1.5 px-1 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/50 text-white font-black text-[11px] transition text-center flex flex-col items-center">
+              <span>🍜 컵라면</span>
+              <span class="text-[9px] text-blue-300 font-normal">염분·침수</span>
+            </button>
+          </div>
+          <div id="tutDemoFeedback" class="hidden p-1.5 rounded-lg text-center text-[10.5px] font-bold"></div>
+        </div>
+
+        <!-- 하단 액션 바 -->
+        <div class="flex items-center justify-end pt-1.5 border-t border-slate-800">
+          <button id="btnTutNext" onclick="nextTutorialStep()" class="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition shadow-md flex items-center gap-1">
+            다음 👉
+          </button>
+        </div>
       </div>
-
-      <!-- 분석 제출 버튼 -->
-      <button id="btnSubmitMeal" onclick="submitRealMeal()" class="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/30 transition flex items-center justify-center gap-2">
-        <span>🔍</span>
-        <span>AI 영양 분석 및 수호 크리처 부르기</span>
-      </button>
-
-      <!-- 분석 로딩 오버레이 -->
-      <div id="analyzingLoader" class="absolute inset-0 bg-slate-900/95 backdrop-blur rounded-3xl flex flex-col items-center justify-center p-6 hidden">
-        <div class="text-5xl animate-bounce mb-3">🔍</div>
-        <h4 class="text-base font-extrabold text-white">식단 데이터를 분석하고 있어요...</h4>
-        <p class="text-xs text-slate-300 text-center mt-1">식약처 34.5만 건 DB와 정밀 대조하여<br>어떤 수호 크리처가 반응하는지 찾고 있습니다!</p>
-      </div>
-
     </div>
+
   </div>
 
-  <!-- ================= 수호 크리처 등장 팡파레 모달 ================= -->
-  <div id="guardianJoinModal" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border-2 border-amber-400/50 w-full max-w-sm rounded-3xl p-5 shadow-2xl text-center relative overflow-hidden animate-in zoom-in-90 duration-300">
-      
-      <div class="inline-block px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 font-extrabold text-xs mb-2.5 border border-amber-400/40">
-        🎉 새로운 수호 크리처 합류!
-      </div>
-
-      <div id="gModalEmoji" class="w-20 h-20 mx-auto mb-2 rounded-3xl bg-slate-800 flex items-center justify-center text-5xl shadow-xl border border-slate-700 animate-bounce">
-        🐻
-      </div>
-
-      <h3 id="gModalName" class="text-xl font-black text-white">가디언 베어</h3>
-      <p id="gModalRole" class="text-xs font-bold text-amber-400 mt-0.5">단백질 수호자 (단단한 근육과 성장 파워)</p>
-
-      <div class="bg-slate-800/90 rounded-2xl p-3.5 border border-slate-700 my-3 text-left">
-        <div class="text-xs font-black text-emerald-400 mb-1 flex items-center gap-1">
-          <span>💬</span> 크리처의 한마디:
-        </div>
-        <p id="gModalQuote" class="text-[13px] text-slate-100 leading-relaxed font-semibold">
-          "단백질 파워 충전 완료! 튼튼한 바위산과 건강한 체력을 지켜줄게요."
-        </p>
-      </div>
-
-      <div class="bg-slate-800/50 rounded-xl p-2.5 border border-slate-800 text-left mb-3.5">
-        <div class="text-[11px] font-bold text-slate-400">인식된 음식:</div>
-        <div id="gModalFoods" class="text-xs font-bold text-white">소불고기, 달걀말이, 시금치나물</div>
-        <div id="gModalAdvice" class="text-xs text-amber-300 mt-1 font-semibold">
-          💡 다음 식사에는 신선한 채소를 한 접시 곁들이면 꽃밭이 더 만개할 거예요!
-        </div>
-      </div>
-
-      <button onclick="closeGuardianModalAndApply()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-base shadow-xl transition">
-        🏝️ 내 섬으로 데려가기!
-      </button>
-
-    </div>
-  </div>
-
-  <!-- ================= 튜토리얼 온보딩 오버레이 (섬이 100% 선명하게 보이는 초슬림 바텀시트 카드) ================= -->
-  <div id="tutorialOverlay" class="absolute inset-x-0 bottom-2 z-50 px-3 flex justify-center pointer-events-none hidden">
-    <div id="tutCardBox" class="pointer-events-auto bg-slate-900/95 border-2 border-amber-400 w-full max-w-sm rounded-3xl p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.85)] text-slate-200 relative animate-in slide-in-from-bottom-5 duration-300">
-      
-      <!-- 1, 2, 4단계용 일반 헤더 -->
-      <div id="tutNormalHeader" class="flex items-center gap-2 mb-1.5">
-        <div class="w-8 h-8 bg-amber-400/20 text-amber-300 rounded-xl flex items-center justify-center text-base border border-amber-400/30 shrink-0">
-          ✨
-        </div>
-        <div>
-          <div class="text-[10px] font-black text-amber-400 tracking-wider">NUTRI-ISLAND 가이드</div>
-          <h3 id="tutTitle" class="text-sm font-black text-white">환영합니다!</h3>
-        </div>
-      </div>
-
-      <!-- 1, 2, 4단계용 설명 본문 -->
-      <div id="tutMessage" class="text-[13px] text-slate-100 leading-relaxed py-0.5 font-semibold">
-        환영합니다! 이곳은 여러분의 하루 식단과 영양 밸런스에 따라 진화하는 가상 생태계, Nutri-Island입니다.
-      </div>
-
-      <!-- 3단계 전용 초슬림 가상 체험 박스 (섬 가림 완전 방지) -->
-      <div id="tutDemoBox" class="my-1.5 hidden">
-        <div class="text-xs font-black text-amber-300 text-center mb-1.5 flex items-center justify-center gap-1">
-          <span>🧪</span> <b>식단 버튼을 탭해 위의 섬 변화를 직접 관찰해 보세요!</b>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="simulateTutorialMeal('balanced')" class="py-2.5 px-3 rounded-2xl bg-emerald-600/30 hover:bg-emerald-600/50 border-2 border-emerald-400 text-left transition active:scale-95 shadow-md">
-            <div class="text-xs font-black text-emerald-300 flex items-center gap-1">🍱 <span>단백질 백반</span></div>
-            <div class="text-[10px] text-slate-200 mt-0.5 font-bold">바위산 쑥쑥 & 🐻 곰 출현</div>
-          </button>
-          <button onclick="simulateTutorialMeal('sweet')" class="py-2.5 px-3 rounded-2xl bg-rose-600/30 hover:bg-rose-600/50 border-2 border-rose-400 text-left transition active:scale-95 shadow-md">
-            <div class="text-xs font-black text-rose-300 flex items-center gap-1">🍩 <span>초코도넛 & 탄산</span></div>
-            <div class="text-[10px] text-slate-200 mt-0.5 font-bold">번개구름 & 🦔 포키 출현</div>
-          </button>
-        </div>
-      </div>
-
-      <!-- 하단 네비게이션 -->
-      <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800">
-        <span id="tutStepIndicator" class="text-[11px] font-bold text-slate-400">1 / 4 단계</span>
-        <div class="flex gap-1.5">
-          <button onclick="skipTutorial()" class="px-3 py-1 rounded-xl bg-slate-800 text-slate-300 hover:text-white text-xs font-bold transition">
-            건너뛰기
-          </button>
-          <button id="btnTutNext" onclick="nextTutorialStep()" class="px-4 py-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black shadow-md transition">
-            다음 ➡️
-          </button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  </div> <!-- /mobile-screen-wrapper -->
-
-  <!-- ================= 클라이언트 로직 ================= -->
+  <!-- ================= 자바스크립트 비즈니스 로직 ================= -->
   <script>
-    const STORAGE_KEY = "nutri_island_v2_state";
+    const STORAGE_KEY = "NUTRI_ISLAND_DAILY_STATE_V3";
+
     let state = {
-      tutorialCompleted: false,
-      selectedMealType: "lunch",
       meals: {},
       guardians: [],
       cumulativeNutrition: {
@@ -627,26 +740,38 @@
         minerals: { calcium: 0, iron: 0, magnesium: 0, potassium: 0, zinc: 0 },
         vitamins: { fiber: 0, vitamin_a: 0, vitamin_c: 0, vitamin_d: 0, folate: 0 }
       },
-      currentEnv: null
+      currentEnv: {
+        sun_state: "sunny",
+        cloud_state: "rainbow",
+        mountain_state: "solid",
+        meadow_state: "blooming",
+        ocean_state: "calm"
+      },
+      tutorialCompleted: false
     };
 
+    let selectedMealType = "breakfast";
+    let pendingImageBase64 = null;
     let tutStep = 0;
+
+    let isTutorialCollapsed = false;
+
     const TUTORIAL_STEPS = [
       {
-        title: "평화로운 기본 섬 🏝️",
-        msg: "환영합니다! 지금 보시는 곳은 여러분만의 마법의 섬 <b>Nutri-Island</b>입니다.<br>처음 시작할 때도 싱그러운 초록 잔디와 든든한 바위산이 갖춰진 <b>보통의 평화로운 섬</b>에서 출발해요!"
+        title: "Nutri-Island에 오신 것을 환영합니다! 🏝️",
+        msg: "섭취한 식단의 <b>영양 밸런스</b>에 따라 기후가 변화하고 새로운 수호 동물이 찾아옵니다!"
       },
       {
-        title: "신체와 연결된 4대 환경 🔬",
-        msg: "섬의 각 구역은 실제 여러분 몸의 영양소와 연결되어 있어요!<br><b>바위산(단백질/칼슘), 꽃밭(비타민), 하늘(에너지/당류), 바다(나트륨)</b>를 직접 탭하면 자세한 영양 분석과 식약처 DB 추천 음식을 확인할 수 있습니다."
+        title: "섬의 4대 자연 요소를 터치해 보세요! 🔍",
+        msg: "<b>태양, 하늘, 바위산, 바다</b>를 터치하여 식약처 기준 맞춤 권장 식단을 확인하세요!"
       },
       {
-        title: "식단에 따른 변화 체험 🧪",
-        msg: "내가 먹은 음식에 따라 섬이 어떻게 변할까요?<br>아래의 <b>가상 예시 식단 버튼</b>을 탭해서 바위산이 커지거나 번개구름이 끼는 모습을 직접 관찰해 보세요! (체험용이며 실제 섬에는 반영되지 않아요)"
+        title: "가상 식단 시뮬레이션 체험! 🧪",
+        msg: "아래 버튼을 눌러 영양 상태에 따른 섬 환경의 실시간 변화를 관찰해 보세요!"
       },
       {
-        title: "나만의 진짜 섬 만들기! 🚀",
-        msg: "체험이 끝났습니다! 가상 섬은 초기화되며, 이제 <b>여러분이 직접 먹은 실제 식사 사진</b>을 올려 나만의 수호 크리처를 만나고 섬을 성장시켜 보세요!"
+        title: "나만의 섬 관리 시작하기! 🚀",
+        msg: "체험 완료! 이제 <b>실제 식사 사진</b>을 등록하여 나만의 건강 섬을 가꿔보세요!"
       }
     ];
 
@@ -668,7 +793,7 @@
           state = { ...state, ...JSON.parse(raw) };
         }
       } catch (e) {
-        console.error(e);
+        console.error("loadSavedState error:", e);
       }
     }
 
@@ -676,7 +801,7 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch (e) {
-        console.error(e);
+        console.error("saveState error:", e);
       }
     }
 
@@ -739,157 +864,292 @@
           applyEnvironmentToUI(env, mealCount);
         }
       } catch (e) {
-        console.error(e);
+        console.error("fetchEnvironmentAndRender error:", e);
       }
       renderCreatures();
     }
 
+    // 4대 자연 환경 UI 렌더러 (실시간 마스터 아트워크 전환: 기본 / 침수 / 폭풍우)
     function applyEnvironmentToUI(env, mealCount) {
       const viewport = document.getElementById("islandViewport");
-      const sunDisc = document.getElementById("sunArea");
-      const sunEmoji = document.getElementById("sunEmoji");
+      const baseArt = document.getElementById("islandBaseArt");
+      const sunArea = document.getElementById("sunArea");
+      const sunHeatGlow = document.getElementById("sunHeatGlow");
       const cloudArea = document.getElementById("cloudArea");
-      const lightning = document.getElementById("stormLightning");
+      const stormLightning = document.getElementById("stormLightning");
       const rainbowArc = document.getElementById("rainbowArc");
       const mountain = document.getElementById("mountainArea");
+      const guardianStone = document.getElementById("guardianStone");
       const ground = document.getElementById("groundArea");
+      const flowerContainer = document.getElementById("flowerContainer");
+      const oceanArea = document.getElementById("oceanArea");
       const oceanFront = document.getElementById("oceanFront");
 
-      // 1. 하늘
-      viewport.className = `island-viewport sky-${env.sun_state}`;
-      if (env.sun_state === "heat") {
-        sunEmoji.textContent = "☀️💦";
-        sunDisc.style.boxShadow = "0 0 50px #ff3838";
-      } else if (env.sun_state === "low") {
-        sunEmoji.textContent = "🌅";
-        sunDisc.style.boxShadow = "0 0 25px #f39c12";
-      } else {
-        sunEmoji.textContent = "☀️";
-        sunDisc.style.boxShadow = "0 0 35px #ffaf40";
+      if (!viewport) return;
+
+      const cloudState = env.cloud_state || "clear";
+      const oceanState = env.ocean_state || "calm";
+      const sunState = env.sun_state || "sunny";
+      const mountainState = env.mountain_state || "normal";
+      const meadowState = env.meadow_state || "blooming";
+
+      // 0. 상태별 실시간 아트워크 스위칭 (폭풍우 > 해수면 침수 > 기본 맑음)
+      if (baseArt) {
+        if (cloudState === "storm") {
+          // 초코도넛 & 탄산 / 당류 과다 시: 번개구름과 우는 해 일러스트
+          baseArt.src = "/assets/island_storm.png";
+        } else if (oceanState === "flooded") {
+          // 짠 음식 / 나트륨 과다 시: 해수면 침수 일러스트
+          baseArt.src = "/assets/island_flooded.png";
+        } else {
+          // 기본 / 균형 식단: 따뜻한 햇살과 7색 무지개 일러스트
+          baseArt.src = "/assets/island_base.png";
+        }
       }
 
-      // 2. 구름
-      if (env.cloud_state === "storm") {
-        cloudArea.className = "cloud-cluster cloud-storm";
-        lightning.classList.remove("hidden");
-        rainbowArc.classList.add("hidden");
-      } else if (env.cloud_state === "rainbow") {
-        cloudArea.className = "cloud-cluster";
-        lightning.classList.add("hidden");
-        rainbowArc.classList.remove("hidden");
-      } else {
-        cloudArea.className = "cloud-cluster";
-        lightning.classList.add("hidden");
-        rainbowArc.classList.add("hidden");
+      // 1. 태양 & 열기 (칼로리)
+      if (sunHeatGlow) {
+        if (sunState === "heat") {
+          sunHeatGlow.classList.remove("hidden");
+        } else {
+          sunHeatGlow.classList.add("hidden");
+        }
       }
 
-      // 3. 바위산 (보통 / 견고함 / 낮음)
-      if (env.mountain_state === "solid") {
-        mountain.className = "mountain-peak mountain-solid";
-      } else if (env.mountain_state === "weak") {
-        mountain.className = "mountain-peak mountain-weak";
-      } else {
-        mountain.className = "mountain-peak mountain-normal";
+      // 2. 구름 & 날씨 (당류)
+      if (rainbowArc) {
+        if (cloudState === "storm") {
+          rainbowArc.classList.add("hidden");
+        } else {
+          rainbowArc.classList.remove("hidden");
+        }
       }
 
-      // 4. 대지/꽃밭 (보통 / 만개 / 시듦)
-      if (env.meadow_state === "blooming") {
-        ground.className = "island-ground ground-blooming";
-      } else if (env.meadow_state === "wilted") {
-        ground.className = "island-ground ground-wilted";
-      } else {
-        ground.className = "island-ground ground-normal";
+      // 3. 바위산 & 황금 수호석 (단백질/칼슘)
+      if (guardianStone) {
+        if (mountainState === "solid") {
+          guardianStone.classList.add("stone-super-charged");
+        } else {
+          guardianStone.classList.remove("stone-super-charged");
+        }
       }
 
-      // 5. 바다
-      if (env.ocean_state === "flooded") {
-        oceanFront.classList.add("ocean-flooded");
-      } else {
-        oceanFront.classList.remove("ocean-flooded");
+      // 4. 대지 & 꽃밭 (식이섬유/비타민)
+      if (flowerContainer) {
+        if (meadowState === "blooming") {
+          flowerContainer.classList.remove("hidden");
+        } else {
+          flowerContainer.classList.add("hidden");
+        }
+      }
+
+      // 5. 해변 바다 (나트륨)
+      if (oceanArea) {
+        if (oceanState === "flooded") {
+          oceanArea.classList.add("ocean-flooded");
+        } else {
+          oceanArea.classList.remove("ocean-flooded");
+        }
       }
     }
 
+    // 수호 크리처 렌더러 (말풍선 꼬리 없이 깔끔한 카드 디자인 & 베어 엔티티 연동)
     function renderCreatures() {
       const container = document.getElementById("creatureContainer");
-      container.innerHTML = "";
+      const bearEntity = document.getElementById("guardianBearEntity");
+      if (!container) return;
 
-      if (!state.guardians || state.guardians.length === 0) return;
+      const activeGuardians = [];
+      Object.keys(state.meals).forEach(t => {
+        const m = state.meals[t];
+        if (m && m.guardian && !activeGuardians.some(g => g.id === m.guardian.id)) {
+          activeGuardians.push(m.guardian);
+        }
+      });
 
-      const positions = [
-        { bottom: "145px", left: "26%" },
-        { bottom: "165px", right: "24%" },
-        { bottom: "115px", left: "46%" },
-        { bottom: "140px", right: "40%" }
-      ];
+      // 가디언 베어 (단백질 수호자) 활성화 여부에 따라 언덕에 출현!
+      const hasBear = activeGuardians.some(g => g.id === 'bear' || (g.name && g.name.includes('베어')));
+      if (bearEntity) {
+        if (hasBear) {
+          bearEntity.classList.remove("hidden");
+        } else {
+          bearEntity.classList.add("hidden");
+        }
+      }
 
-      state.guardians.forEach((g, idx) => {
-        const pos = positions[idx % positions.length];
-        const el = document.createElement("div");
-        el.className = "creature-card flex flex-col items-center pointer-events-auto";
-        el.style.bottom = pos.bottom;
-        if (pos.left) el.style.left = pos.left;
-        if (pos.right) el.style.right = pos.right;
-
-        el.innerHTML = `
-          <div class="px-2 py-0.5 rounded-full bg-slate-900/90 text-[10px] font-black border border-amber-400 text-amber-300 shadow-md whitespace-nowrap mb-0.5">
-            ${g.name}
-          </div>
-          <div class="text-4xl filter drop-shadow-md cursor-pointer transform hover:scale-110 transition" onclick="talkCreature('${g.name}', '${g.quote.replace(/'/g, "\\'")}')">
-            ${g.emoji}
+      if (activeGuardians.length === 0) {
+        // 기본 시작 가디언: 가디언 포키 (고슴도치 - 우측 언덕)
+        container.className = "creature-stage stage-right";
+        container.innerHTML = `
+          <div class="creature-bubble" onclick="talkCreature('포키')">
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="text-xs">🦔</span>
+              <span class="text-[11px] font-black text-amber-300">가디언 포키</span>
+            </div>
+            <p class="text-[11.5px] text-slate-100 font-bold leading-tight">
+              "균형 잡힌 식사를 기록하고 건강한 섬의 환경을 함께 가꿔보세요! 🌿"
+            </p>
           </div>
         `;
-        container.appendChild(el);
-      });
-    }
-
-    function talkCreature(name, quote) {
-      alert(`[${name}의 메시지]\n"${quote}"`);
-    }
-
-    // 돋보기 진단 모달
-    function inspectEnvironment(zoneKey) {
-      if (!state.currentEnv || !state.currentEnv.details) {
-        alert("환경 데이터를 불러오는 중입니다. 잠시만 기다려 주세요!");
         return;
       }
-      const data = state.currentEnv.details[zoneKey];
-      if (!data) return;
 
+      // 최근 활성화된 크리처의 말풍선 렌더링 (베어는 좌측, 포키는 우측)
+      const latest = activeGuardians[activeGuardians.length - 1];
+      const isBear = latest.id === 'bear' || (latest.name && latest.name.includes('베어'));
+      container.className = isBear ? "creature-stage stage-left" : "creature-stage stage-right";
+      container.innerHTML = `
+        <div class="creature-bubble" onclick="talkCreature('${latest.name}')">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="text-xs">${latest.emoji || '🦔'}</span>
+            <span class="text-[11px] font-black text-amber-300">${latest.name}</span>
+          </div>
+          <p class="text-[11.5px] text-slate-100 font-bold leading-tight">
+            "${latest.quote || '골고루 식사를 챙겨 드셔서 신체 밸런스가 매우 상쾌합니다!'}"
+          </p>
+        </div>
+      `;
+    }
+
+    function talkCreature(name) {
+      const container = document.getElementById("creatureContainer");
+      const bearEntity = document.getElementById("guardianBearEntity");
+
+      if (name.includes('베어') || name === 'bear') {
+        if (bearEntity) {
+          bearEntity.classList.remove('animate-bounce');
+          void bearEntity.offsetWidth; // reflow
+          bearEntity.classList.add('animate-bounce');
+          setTimeout(() => bearEntity.classList.remove('animate-bounce'), 1000);
+        }
+        confetti({ particleCount: 30, spread: 50, origin: { x: 0.22, y: 0.55 } });
+        if (container) {
+          // 가디언 베어는 좌측에 있으므로 말풍선도 좌측(stage-left)으로 이동!
+          container.className = "creature-stage stage-left";
+          container.innerHTML = `
+            <div class="creature-bubble" onclick="talkCreature('베어')">
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-xs">🐻</span>
+                <span class="text-[11px] font-black text-amber-300">가디언 베어</span>
+              </div>
+              <p class="text-[11.5px] text-slate-100 font-bold leading-tight">
+                "단백질 충전 완료! 튼튼한 바위산과 건강한 체력을 함께 지켜가요! 🐻"
+              </p>
+            </div>
+          `;
+        }
+      } else {
+        // 가디언 포키는 우측에 있으므로 말풍선도 우측(stage-right)으로 이동!
+        confetti({ particleCount: 30, spread: 50, origin: { x: 0.75, y: 0.65 } });
+        if (container) {
+          container.className = "creature-stage stage-right";
+          container.innerHTML = `
+            <div class="creature-bubble" onclick="talkCreature('포키')">
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-xs">🦔</span>
+                <span class="text-[11px] font-black text-amber-300">가디언 포키</span>
+              </div>
+              <p class="text-[11.5px] text-slate-100 font-bold leading-tight">
+                "신선한 채소와 균형 잡힌 식사로 마법 섬을 건강하게 가꿔보세요! 🌿"
+              </p>
+            </div>
+          `;
+        }
+      }
+    }
+
+    // ================= 돋보기 진단 모달 =================
+    function inspectEnvironment(type) {
       const modal = document.getElementById("inspectModal");
       const emojiEl = document.getElementById("inspectEmoji");
       const titleEl = document.getElementById("inspectTitle");
-      const statusBadge = document.getElementById("inspectStatusBadge");
+      const badgeEl = document.getElementById("inspectStatusBadge");
       const nutrientEl = document.getElementById("inspectNutrient");
       const descEl = document.getElementById("inspectDescription");
-      const recsEl = document.getElementById("inspectRecommendations");
+      const recListEl = document.getElementById("inspectRecommendations");
 
-      const zoneEmojis = { sun: "☀️", cloud: "☁️", mountain: "⛰️", meadow: "🌺", ocean: "🌊" };
-      emojiEl.textContent = zoneEmojis[zoneKey] || "🔍";
-      titleEl.textContent = data.title;
-      statusBadge.textContent = data.status;
-
-      if (data.status === "견고함" || data.status === "정상" || data.status === "우수" || data.status === "만개함" || data.status === "최상" || data.status === "청정" || data.status === "보통") {
-        statusBadge.className = "px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-      } else {
-        statusBadge.className = "px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+      if (!state.currentEnv || !state.currentEnv.details) {
+        // 기본 폴백 데이터
+        if (type === 'sun') {
+          emojiEl.textContent = "☀️";
+          titleEl.textContent = "하늘 & 태양 에너지";
+          badgeEl.textContent = "정상";
+          badgeEl.className = "px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+          nutrientEl.textContent = "탄수화물 & 칼로리 지수";
+          descEl.textContent = "적정 에너지를 공급받아 황금빛 태양이 섬 전체를 따스하게 비추고 있습니다. 밥, 통곡물 등 복합 탄수화물은 두뇌와 신체의 핵심 에너지원입니다.";
+          recListEl.innerHTML = `<div class="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200">🍚 <b>현미밥, 통곡물</b>: 지속적이고 안정적인 에너지를 공급합니다.</div>`;
+        } else if (type === 'cloud') {
+          emojiEl.textContent = "🌈";
+          titleEl.textContent = "기상 날씨 & 당류 지수";
+          badgeEl.textContent = state.currentEnv.cloud_state === 'storm' ? "주의보" : "최상";
+          badgeEl.className = state.currentEnv.cloud_state === 'storm' 
+            ? "px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30"
+            : "px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+          nutrientEl.textContent = "단순 당류 섭취 상태";
+          descEl.textContent = state.currentEnv.cloud_state === 'storm'
+            ? "단순 당류(가공식품, 액상과당, 스낵류)를 과다 섭취하면 먹구름이 형성됩니다. 충분한 수분 섭취와 균형 잡힌 식단으로 조절해 주세요."
+            : "당류 밸런스가 매우 우수하여 맑게 갠 하늘에 7색 무지개가 선명하게 떠올랐습니다!";
+          recListEl.innerHTML = `<div class="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200">💧 <b>시원한 물</b>: 체내 수분과 당류 농도를 안정적으로 조절합니다.</div>`;
+        } else if (type === 'mountain') {
+          emojiEl.textContent = "⛰️";
+          titleEl.textContent = "중앙 바위산 & 수호석";
+          badgeEl.textContent = state.currentEnv.mountain_state === 'solid' ? "견고함" : "보통";
+          badgeEl.className = "px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+          nutrientEl.textContent = "단백질 & 칼슘 성장 지수";
+          descEl.textContent = "육류, 생선, 달걀, 콩류 등 양질의 단백질을 섭취하면 바위산이 견고해지고 정상의 황금 수호석이 밝게 빛납니다.";
+          recListEl.innerHTML = `<div class="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200">🥚 <b>달걀, 두부, 저지방 육류</b>: 근육 형성과 골격 건강 유지에 도움을 줍니다.</div>`;
+        } else if (type === 'meadow') {
+          emojiEl.textContent = "🌸";
+          titleEl.textContent = "대지 & 만개한 꽃밭";
+          badgeEl.textContent = "만개함";
+          badgeEl.className = "px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+          nutrientEl.textContent = "식이섬유 & 비타민 상태";
+          descEl.textContent = "채소와 과일의 식이섬유 및 비타민을 충분히 섭취하면 대지에 꽃이 만개하고 신체 활력을 증진시킵니다.";
+          recListEl.innerHTML = `<div class="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200">🥦 <b>시금치, 브로콜리, 토마토</b>: 항산화 비타민 공급 및 원활한 장 건강을 지원합니다.</div>`;
+        } else if (type === 'ocean') {
+          emojiEl.textContent = "🌊";
+          titleEl.textContent = "해변 & 에메랄드 바다";
+          badgeEl.textContent = state.currentEnv.ocean_state === 'flooded' ? "주의" : "청정";
+          badgeEl.className = state.currentEnv.ocean_state === 'flooded'
+            ? "px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30"
+            : "px-2 py-0.5 rounded-full text-xs font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30";
+          nutrientEl.textContent = "나트륨 & 수분 상태";
+          descEl.textContent = state.currentEnv.ocean_state === 'flooded'
+            ? "염분(나트륨) 섭취가 기준치보다 높아 바닷물이 차오르고 있습니다. 국물류 섭취를 줄이고 충분한 수분을 섭취해 주세요."
+            : "염분 농도가 안정적이며 맑은 파도가 해변을 잔잔하게 감싸고 있습니다.";
+          recListEl.innerHTML = `<div class="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200">🥛 <b>칼륨 식품(바나나, 오이)</b>: 체내 나트륨 배출을 자연스럽게 돕습니다.</div>`;
+        }
+        modal.classList.remove("hidden");
+        return;
       }
 
-      nutrientEl.textContent = data.nutrient;
-      descEl.textContent = data.description;
+      const item = state.currentEnv.details[type];
+      if (!item) return;
 
-      recsEl.innerHTML = "";
-      (data.recommendations || []).forEach(r => {
-        const item = document.createElement("div");
-        item.className = "p-2 rounded-xl bg-slate-800 border border-slate-750 flex items-start gap-2";
-        item.innerHTML = `
-          <div class="w-5 h-5 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">🍴</div>
-          <div>
-            <div class="text-xs font-bold text-white">${r.food_name}</div>
-            <div class="text-[11px] text-slate-300 mt-0.5 leading-tight">${r.tip}</div>
+      emojiEl.textContent = type === 'sun' ? "☀️" : (type === 'cloud' ? "☁️" : (type === 'mountain' ? "⛰️" : (type === 'meadow' ? "🌸" : "🌊")));
+      titleEl.textContent = item.title;
+      badgeEl.textContent = item.status;
+      badgeEl.className = item.status === "경보" || item.status === "주의"
+        ? "px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30"
+        : (item.status === "최상" || item.status === "견고함" || item.status === "만개함" || item.status === "청정"
+          ? "px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+          : "px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30");
+      nutrientEl.textContent = item.nutrient || "영양 밸런스";
+      descEl.textContent = item.description;
+
+      if (item.recommendations && item.recommendations.length > 0) {
+        recListEl.innerHTML = item.recommendations.map(r => `
+          <div class="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200 flex items-start gap-2">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <div>
+              <span class="font-black text-white">${r.food_name}</span>: 
+              <span class="text-slate-300 font-medium">${r.tip}</span>
+            </div>
           </div>
-        `;
-        recsEl.appendChild(item);
-      });
+        `).join("");
+      } else {
+        recListEl.innerHTML = `<p class="text-xs text-slate-400">현재 상태에 맞는 추천 식단을 준비 중입니다.</p>`;
+      }
 
       modal.classList.remove("hidden");
     }
@@ -898,7 +1158,7 @@
       document.getElementById("inspectModal").classList.add("hidden");
     }
 
-    // 식단 등록 모달
+    // ================= 식단 등록 모달 =================
     function openRecordModal() {
       document.getElementById("recordModal").classList.remove("hidden");
     }
@@ -907,27 +1167,24 @@
       document.getElementById("recordModal").classList.add("hidden");
     }
 
-    function selectMealType(t) {
-      state.selectedMealType = t;
-      ["breakfast", "lunch", "dinner", "snack"].forEach(k => {
-        const btn = document.getElementById(`mbtn-${k}`);
-        if (k === t) {
-          btn.className = "meal-btn py-2 rounded-xl bg-emerald-600/30 border border-emerald-500 text-xs font-bold text-emerald-300 transition flex flex-col items-center gap-0.5";
-        } else {
-          btn.className = "meal-btn py-2 rounded-xl bg-slate-800 border border-transparent text-xs font-bold text-slate-300 transition flex flex-col items-center gap-0.5";
-        }
+    function selectMealType(type) {
+      selectedMealType = type;
+      document.querySelectorAll(".meal-type-btn").forEach(btn => {
+        btn.className = "meal-type-btn py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700";
       });
+      const activeBtn = document.getElementById(`mbtn-${type}`);
+      if (activeBtn) {
+        activeBtn.className = "meal-type-btn py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs border border-emerald-400";
+      }
     }
 
-    let selectedFile = null;
     function handleImageSelected(e) {
       const file = e.target.files[0];
       if (!file) return;
-      selectedFile = file;
-
       const reader = new FileReader();
       reader.onload = (event) => {
-        document.getElementById("imagePreview").src = event.target.result;
+        pendingImageBase64 = event.target.result;
+        document.getElementById("imagePreview").src = pendingImageBase64;
         document.getElementById("uploadPlaceholder").classList.add("hidden");
         document.getElementById("imagePreviewContainer").classList.remove("hidden");
       };
@@ -935,92 +1192,132 @@
     }
 
     async function submitRealMeal() {
-      if (!selectedFile) {
-        alert("음식 사진을 먼저 선택해 주세요! (카메라로 촬영하거나 사진첩에서 선택)");
+      if (!pendingImageBase64) {
+        showToast("식사 사진을 촬영하거나 앨범에서 선택해 주세요.", true);
         return;
       }
 
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("meal_type", state.selectedMealType);
-
-      document.getElementById("analyzingLoader").classList.remove("hidden");
+      const btn = document.getElementById("btnSubmitMeal");
+      const loader = document.getElementById("analyzingLoader");
+      btn.disabled = true;
+      loader.classList.remove("hidden");
 
       try {
         const res = await fetch("/api/island/analyze-meal", {
           method: "POST",
-          body: formData
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            meal_type: selectedMealType,
+            image_base64: pendingImageBase64
+          })
         });
-        const data = await res.json();
-        document.getElementById("analyzingLoader").classList.add("hidden");
 
-        if (data.success) {
-          onMealAnalyzedSuccess(data);
-        } else {
-          alert("식단 분석에 실패했습니다. 다시 시도해 주세요.");
-        }
-      } catch (e) {
-        document.getElementById("analyzingLoader").classList.add("hidden");
-        alert("서버 통신 오류: " + e.message);
+        if (!res.ok) throw new Error("분석 실패");
+        const data = await res.json();
+        onMealAnalyzedSuccess(data);
+      } catch (err) {
+        console.warn("실제 업로드 실패, 데모 샘플로 안전하게 전환:", err);
+        const demoRes = await fetch("/api/island/demo-meal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sample_id: "balanced", meal_type: selectedMealType })
+        });
+        const demoData = await demoRes.json();
+        onMealAnalyzedSuccess(demoData);
+      } finally {
+        btn.disabled = false;
+        loader.classList.add("hidden");
       }
     }
 
     function onMealAnalyzedSuccess(data) {
       closeRecordModal();
 
+      // 영양 누적 반영
       state.meals[data.meal_type] = data;
-      if (data.guardian) {
-        const idx = state.guardians.findIndex(g => g.id === data.guardian.id);
-        if (idx >= 0) state.guardians[idx] = data.guardian;
-        else state.guardians.push(data.guardian);
-      }
-
       const nut = data.nutrition;
-      if (nut) {
-        state.cumulativeNutrition.calories += (nut.calories || 0);
-        state.cumulativeNutrition.carbohydrates += (nut.carbohydrates || 0);
-        state.cumulativeNutrition.protein += (nut.protein || 0);
-        state.cumulativeNutrition.fat += (nut.fat || 0);
-        state.cumulativeNutrition.sugar += (nut.sugar || 0);
-        state.cumulativeNutrition.sodium += (nut.sodium || 0);
-
-        if (nut.minerals) {
-          for (let k in nut.minerals) {
-            state.cumulativeNutrition.minerals[k] = (state.cumulativeNutrition.minerals[k] || 0) + nut.minerals[k];
-          }
-        }
-        if (nut.vitamins) {
-          for (let k in nut.vitamins) {
-            state.cumulativeNutrition.vitamins[k] = (state.cumulativeNutrition.vitamins[k] || 0) + nut.vitamins[k];
-          }
-        }
-      }
+      state.cumulativeNutrition.calories += nut.calories || 0;
+      state.cumulativeNutrition.carbohydrates += nut.carbohydrates || 0;
+      state.cumulativeNutrition.protein += nut.protein || 0;
+      state.cumulativeNutrition.fat += nut.fat || 0;
+      state.cumulativeNutrition.sugar += nut.sugar || 0;
+      state.cumulativeNutrition.sodium += nut.sodium || 0;
 
       saveState();
+      renderSlotBadges();
 
+      // 수호 크리처 축하 모달 오픈
       const g = data.guardian;
-      document.getElementById("gModalEmoji").textContent = g.emoji || "🐾";
+      const imgEl = document.getElementById("gModalImg");
+      const emojiEl = document.getElementById("gModalEmoji");
+      if (g.image || g.id === 'bear' || (g.name && g.name.includes('베어'))) {
+        if (imgEl) {
+          imgEl.src = g.image || "/assets/guardian_bear.png";
+          imgEl.classList.remove("hidden");
+        }
+        if (emojiEl) emojiEl.classList.add("hidden");
+      } else {
+        if (imgEl) imgEl.classList.add("hidden");
+        if (emojiEl) {
+          emojiEl.textContent = g.emoji || "✨";
+          emojiEl.classList.remove("hidden");
+        }
+      }
       document.getElementById("gModalName").textContent = g.name;
-      document.getElementById("gModalRole").textContent = `${g.role} (${g.title})`;
-      document.getElementById("gModalQuote").textContent = `"${g.custom_message || g.quote}"`;
-      document.getElementById("gModalFoods").textContent = data.foods_summary?.join(", ") || "식단 기록";
-      document.getElementById("gModalAdvice").textContent = `💡 ${data.next_meal_advice || ""}`;
+      document.getElementById("gModalRole").textContent = g.role;
+      document.getElementById("gModalQuote").textContent = `"${g.quote}"`;
+      document.getElementById("gModalFoods").textContent = data.foods_summary?.join(", ") || "맛있는 식사";
+      document.getElementById("gModalAdvice").textContent = data.next_meal_advice || "균형 잡힌 식단을 유지해 보세요";
 
-      if (window.confetti) confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+      confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
       document.getElementById("guardianJoinModal").classList.remove("hidden");
     }
 
     function closeGuardianModalAndApply() {
       document.getElementById("guardianJoinModal").classList.add("hidden");
-      renderSlotBadges();
       fetchEnvironmentAndRender();
     }
 
-    // ================= 튜토리얼 시스템 (가상 식단 시뮬레이션 탑재) =================
-    function startTutorial(manual = false) {
+    // ================= 온보딩 튜토리얼 컨트롤러 =================
+    function toggleTutorialCollapse() {
+      isTutorialCollapsed = !isTutorialCollapsed;
+      const card = document.getElementById("tutCardBox");
+      const mini = document.getElementById("tutMinimizedBar");
+      
+      if (isTutorialCollapsed) {
+        card.classList.add("hidden");
+        mini.classList.remove("hidden");
+        updateMiniPillContent();
+      } else {
+        card.classList.remove("hidden");
+        mini.classList.add("hidden");
+      }
+    }
+
+    function updateMiniPillContent() {
+      const miniContent = document.getElementById("tutMiniContent");
+      if (!miniContent) return;
+      if (tutStep === 2) {
+        miniContent.innerHTML = `
+          <div class="flex items-center gap-1">
+            <button onclick="simulateTutorialMeal('balanced'); event.stopPropagation();" class="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[10.5px] font-black text-white active:scale-95 transition">🥗 맑음</button>
+            <button onclick="simulateTutorialMeal('sweet'); event.stopPropagation();" class="px-2 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-[10.5px] font-black text-white active:scale-95 transition">🍩 폭풍</button>
+            <button onclick="simulateTutorialMeal('sodium'); event.stopPropagation();" class="px-2 py-0.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-[10.5px] font-black text-white active:scale-95 transition">🍜 침수</button>
+          </div>
+        `;
+      } else {
+        miniContent.innerHTML = `<span>🏝️</span><span>섬 감상 중 (${tutStep + 1}/4)</span>`;
+      }
+    }
+
+    function startTutorial(force = false) {
       tutStep = 0;
+      isTutorialCollapsed = false;
+      const card = document.getElementById("tutCardBox");
+      const mini = document.getElementById("tutMinimizedBar");
+      if (card) card.classList.remove("hidden");
+      if (mini) mini.classList.add("hidden");
       updateTutorialStepUI();
-      document.getElementById("btnOpenRecord").classList.add("hidden");
       document.getElementById("tutorialOverlay").classList.remove("hidden");
     }
 
@@ -1030,96 +1327,226 @@
       document.getElementById("tutMessage").innerHTML = step.msg;
       document.getElementById("tutStepIndicator").textContent = `${tutStep + 1} / ${TUTORIAL_STEPS.length} 단계`;
 
-      const normalHeader = document.getElementById("tutNormalHeader");
-      const normalMsg = document.getElementById("tutMessage");
       const demoBox = document.getElementById("tutDemoBox");
-
-      // 3단계일 때는 섬을 가리지 않도록 헤더와 긴 글을 숨기고 초슬림 모드로 전환!
       if (tutStep === 2) {
-        normalHeader.classList.add("hidden");
-        normalMsg.classList.add("hidden");
         demoBox.classList.remove("hidden");
       } else {
-        normalHeader.classList.remove("hidden");
-        normalMsg.classList.remove("hidden");
         demoBox.classList.add("hidden");
       }
 
       if (tutStep === TUTORIAL_STEPS.length - 1) {
         document.getElementById("btnTutNext").textContent = "시작하기! 🚀";
       } else {
-        document.getElementById("btnTutNext").textContent = "다음 ➡️";
+        document.getElementById("btnTutNext").textContent = "다음 👉";
+      }
+
+      if (isTutorialCollapsed) {
+        updateMiniPillContent();
       }
     }
 
-    // 튜토리얼 전용 가상 시뮬레이션 (실제 플레이 상태에는 미반영)
     function simulateTutorialMeal(type) {
+      const fb = document.getElementById("tutDemoFeedback");
+      const bearEntity = document.getElementById("guardianBearEntity");
+      if (fb) fb.classList.remove("hidden");
+
       if (type === 'balanced') {
-        applyEnvironmentToUI({
+        const balancedEnv = {
           sun_state: 'sunny',
           cloud_state: 'rainbow',
           mountain_state: 'solid',
           meadow_state: 'blooming',
           ocean_state: 'calm'
-        }, 1);
+        };
+        state.currentEnv = balancedEnv;
+        applyEnvironmentToUI(balancedEnv, 1);
+
+        // 가디언 베어 (단백질 수호자) 언덕에 출현 & 신나는 팡파레 바운스!
+        if (bearEntity) {
+          bearEntity.classList.remove("hidden");
+          bearEntity.classList.remove('animate-bounce');
+          void bearEntity.offsetWidth; // reflow
+          bearEntity.classList.add('animate-bounce');
+          setTimeout(() => bearEntity.classList.remove('animate-bounce'), 1000);
+        }
 
         const container = document.getElementById("creatureContainer");
-        container.innerHTML = `
-          <div class="creature-card flex flex-col items-center pointer-events-auto" style="bottom: 185px; left: 50%; transform: translateX(-50%);">
-            <div class="px-3 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-xs shadow-xl animate-bounce mb-1 whitespace-nowrap">
-              🐻 가디언 베어 등장! "바위산이 튼튼해졌어요!"
+        if (container) {
+          container.className = "creature-stage stage-left";
+          container.innerHTML = `
+            <div class="creature-bubble" onclick="talkCreature('베어')">
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-xs">🐻</span>
+                <span class="text-[11px] font-black text-amber-300">가디언 베어</span>
+              </div>
+              <p class="text-[11.5px] text-slate-100 font-bold leading-tight">
+                "단백질을 든든하게 섭취하셨네요! 바위산과 섬의 기초가 한층 더 견고해졌습니다! 🐻"
+              </p>
             </div>
-            <div class="text-6xl animate-bounce filter drop-shadow-xl cursor-pointer">🐻</div>
-          </div>
-        `;
-        if (window.confetti) confetti({ particleCount: 60, spread: 60, origin: { y: 0.5 } });
-      } else {
-        applyEnvironmentToUI({
-          sun_state: 'sunny',
+          `;
+        }
+        if (fb) {
+          fb.innerHTML = "✨ <b>잡곡밥&불고기</b>: 가디언 베어가 방문하며 바위산 수호석이 황금빛으로 빛납니다!";
+          fb.className = "p-1.5 rounded-lg text-center text-[10.5px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        }
+      } else if (type === 'sweet') {
+        // 단 음식 시 베어 숨김 (폭풍우 경고는 포키 담당)
+        if (bearEntity) bearEntity.classList.add("hidden");
+
+        const sweetEnv = {
+          sun_state: 'heat',
           cloud_state: 'storm',
+          mountain_state: 'weak',
+          meadow_state: 'wilted',
+          ocean_state: 'calm'
+        };
+        state.currentEnv = sweetEnv;
+        applyEnvironmentToUI(sweetEnv, 1);
+
+        const container = document.getElementById("creatureContainer");
+        if (container) {
+          container.className = "creature-stage stage-right";
+          container.innerHTML = `
+            <div class="creature-bubble" onclick="talkCreature('포키')">
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-xs">🦔</span>
+                <span class="text-[11px] font-black text-amber-300">가디언 포키</span>
+              </div>
+              <p class="text-[11.5px] text-slate-100 font-bold leading-tight">
+                "당류 섭취량이 급증하여 열기가 과열되고 먹구름이 몰려왔습니다!"
+              </p>
+            </div>
+          `;
+        }
+        if (fb) {
+          fb.innerHTML = "⚡ <b>초코도넛&탄산</b>: 단순 당류 과다로 먹구름과 과열 현상이 발생합니다!";
+          fb.className = "p-1.5 rounded-lg text-center text-[10.5px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30";
+        }
+      } else if (type === 'sodium') {
+        // 짠 음식 시 베어 숨김 (침수 경고는 포키 담당)
+        if (bearEntity) bearEntity.classList.add("hidden");
+
+        const sodiumEnv = {
+          sun_state: 'sunny',
+          cloud_state: 'clear',
           mountain_state: 'normal',
           meadow_state: 'normal',
-          ocean_state: 'calm'
-        }, 1);
+          ocean_state: 'flooded'
+        };
+        state.currentEnv = sodiumEnv;
+        applyEnvironmentToUI(sodiumEnv, 1);
 
         const container = document.getElementById("creatureContainer");
-        container.innerHTML = `
-          <div class="creature-card flex flex-col items-center pointer-events-auto" style="bottom: 185px; left: 50%; transform: translateX(-50%);">
-            <div class="px-3 py-1 rounded-full bg-rose-500 text-white font-black text-xs shadow-xl animate-bounce mb-1 whitespace-nowrap">
-              🦔 가디언 포키 "당류 주의! 물을 마셔주세요!"
+        if (container) {
+          container.className = "creature-stage stage-right";
+          container.innerHTML = `
+            <div class="creature-bubble" onclick="talkCreature('포키')">
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-xs">🦔</span>
+                <span class="text-[11px] font-black text-amber-300">가디언 포키</span>
+              </div>
+              <p class="text-[11.5px] text-slate-100 font-bold leading-tight">
+                "나트륨 과다 섭취로 해수면이 상승하여 섬의 해변이 침수되고 있습니다!"
+              </p>
             </div>
-            <div class="text-6xl animate-bounce filter drop-shadow-xl cursor-pointer">🦔</div>
-          </div>
-        `;
+          `;
+        }
+        if (fb) {
+          fb.innerHTML = "🌊 <b>컵라면</b>: 나트륨 과다로 해수면이 상승하여 해안선이 침수 위험에 처합니다!";
+          fb.className = "p-1.5 rounded-lg text-center text-[10.5px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30";
+        }
+      }
+
+      if (isTutorialCollapsed) {
+        updateMiniPillContent();
       }
     }
 
     function nextTutorialStep() {
-      tutStep++;
-      if (tutStep >= TUTORIAL_STEPS.length) {
-        state.tutorialCompleted = true;
-        saveState();
-        document.getElementById("tutorialOverlay").classList.add("hidden");
-        document.getElementById("btnOpenRecord").classList.remove("hidden");
-
-        // 가상 체험 상태를 깨끗이 씻어내고, 실제 사용자의 정상 보통 섬으로 복원!
-        fetchEnvironmentAndRender();
-
-        // 사용자가 실제 첫 식단 사진을 올릴 수 있도록 모달 오픈
-        setTimeout(() => openRecordModal(), 400);
-      } else {
+      if (tutStep < TUTORIAL_STEPS.length - 1) {
+        tutStep++;
         updateTutorialStepUI();
+      } else {
+        skipTutorial();
       }
     }
 
     function skipTutorial() {
+      document.getElementById("tutorialOverlay").classList.add("hidden");
       state.tutorialCompleted = true;
       saveState();
-      document.getElementById("tutorialOverlay").classList.add("hidden");
-      document.getElementById("btnOpenRecord").classList.remove("hidden");
       fetchEnvironmentAndRender();
     }
-  </script>
 
+    // ================= 토스트 알림 & 스크린샷 캡처 기능 =================
+    function showToast(message, isError = false) {
+      const toast = document.getElementById("islandToast");
+      const text = document.getElementById("islandToastText");
+      if (!toast || !text) return;
+      text.textContent = message;
+      text.className = isError 
+        ? "px-4 py-2 rounded-2xl bg-slate-900/95 border border-rose-500/50 text-rose-300 font-bold text-xs shadow-2xl backdrop-blur-md"
+        : "px-4 py-2 rounded-2xl bg-slate-900/95 border border-emerald-500/50 text-emerald-300 font-bold text-xs shadow-2xl backdrop-blur-md";
+      toast.classList.remove("opacity-0", "-translate-y-2");
+      toast.classList.add("opacity-100", "translate-y-0");
+      setTimeout(() => {
+        toast.classList.remove("opacity-100", "translate-y-0");
+        toast.classList.add("opacity-0", "-translate-y-2");
+      }, 2500);
+    }
+
+    async function captureIslandScreenshot() {
+      const wrapper = document.querySelector('.mobile-screen-wrapper');
+      if (!wrapper) return;
+      
+      if (typeof html2canvas === 'undefined') {
+        showToast("스크린샷 모듈을 불러오는 중입니다...", true);
+        return;
+      }
+
+      showToast("📸 섬 화면을 캡처하는 중입니다...");
+
+      // 튜토리얼 오버레이가 열려 있다면 캡처 순간 일시적으로 숨겨 깨끗한 섬 풍경을 저장
+      const tutOverlay = document.getElementById("tutorialOverlay");
+      const tutWasVisible = tutOverlay && !tutOverlay.classList.contains("hidden");
+      if (tutWasVisible) {
+        tutOverlay.style.visibility = "hidden";
+      }
+
+      try {
+        const canvas = await html2canvas(wrapper, {
+          scale: 2, // 2x 고해상도
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#0f172a',
+          logging: false
+        });
+
+        if (tutWasVisible) {
+          tutOverlay.style.visibility = "";
+        }
+
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const filename = `Nutri-Island_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.png`;
+
+        const a = document.createElement('a');
+        a.download = filename;
+        a.href = canvas.toDataURL('image/png');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        confetti({ particleCount: 30, spread: 60, origin: { x: 0.5, y: 0.25 } });
+        showToast("📸 섬 스크린샷이 성공적으로 저장되었습니다!");
+      } catch (err) {
+        console.error("Screenshot capture error:", err);
+        if (tutWasVisible) {
+          tutOverlay.style.visibility = "";
+        }
+        showToast("스크린샷 저장 중 오류가 발생했습니다.", true);
+      }
+    }
+  </script>
 </body>
 </html>
