@@ -539,12 +539,12 @@
     </div>
   </div>
 
-  <!-- ================= 튜토리얼 온보딩 오버레이 (가상 식단 시뮬레이션 탑재) ================= -->
-  <div id="tutorialOverlay" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-amber-400/50 w-full max-w-sm rounded-3xl p-5 shadow-2xl text-slate-200 relative animate-in fade-in zoom-in-95 duration-200">
+  <!-- ================= 튜토리얼 온보딩 오버레이 (섬이 100% 선명하게 보이는 하단 바텀시트 카드) ================= -->
+  <div id="tutorialOverlay" class="fixed inset-x-0 bottom-4 z-50 px-4 flex justify-center pointer-events-none hidden">
+    <div class="pointer-events-auto bg-slate-900/95 border-2 border-amber-400 w-full max-w-sm rounded-3xl p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.85)] text-slate-200 relative animate-in slide-in-from-bottom-5 duration-300">
       
-      <div class="flex items-center gap-2.5 mb-2.5">
-        <div class="w-10 h-10 bg-amber-400/20 text-amber-300 rounded-2xl flex items-center justify-center text-xl border border-amber-400/30 shrink-0">
+      <div class="flex items-center gap-2.5 mb-2">
+        <div class="w-9 h-9 bg-amber-400/20 text-amber-300 rounded-2xl flex items-center justify-center text-lg border border-amber-400/30 shrink-0">
           ✨
         </div>
         <div>
@@ -554,35 +554,35 @@
       </div>
 
       <!-- 설명 본문 (글자 큼직하고 명확하게: 14~15px급) -->
-      <div id="tutMessage" class="text-[14px] text-slate-200 leading-relaxed min-h-[70px] py-1 font-medium">
+      <div id="tutMessage" class="text-[14px] text-slate-100 leading-relaxed min-h-[60px] py-1 font-semibold">
         환영합니다! 이곳은 여러분의 하루 식단과 영양 밸런스에 따라 진화하는 가상 생태계, Nutri-Island입니다.
       </div>
 
       <!-- 튜토리얼 3단계 전용: 가상 예시 식단 체험 버튼 박스 -->
-      <div id="tutDemoBox" class="my-3 p-3 bg-slate-800/90 rounded-2xl border border-slate-700 hidden">
+      <div id="tutDemoBox" class="my-2.5 p-3 bg-slate-800/95 rounded-2xl border border-slate-750 hidden">
         <div class="text-xs font-black text-amber-300 mb-2 flex items-center gap-1">
           <span>🧪</span> 가상 예시 식단을 터치해 보세요:
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <button onclick="simulateTutorialMeal('balanced')" class="p-2.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/50 text-left transition active:scale-95">
+          <button onclick="simulateTutorialMeal('balanced')" class="p-2.5 rounded-xl bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/50 text-left transition active:scale-95 shadow-md">
             <div class="text-xs font-extrabold text-emerald-300">🍱 단백질 백반</div>
-            <div class="text-[10px] text-slate-300 mt-0.5">바위산 쑥쑥 & 곰 출현</div>
+            <div class="text-[10px] text-slate-300 mt-0.5 font-medium">바위산 쑥쑥 & 곰 출현</div>
           </button>
-          <button onclick="simulateTutorialMeal('sweet')" class="p-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 border border-rose-500/50 text-left transition active:scale-95">
+          <button onclick="simulateTutorialMeal('sweet')" class="p-2.5 rounded-xl bg-rose-950/70 hover:bg-rose-900 border border-rose-500/50 text-left transition active:scale-95 shadow-md">
             <div class="text-xs font-extrabold text-rose-300">🍩 초코도넛 & 탄산</div>
-            <div class="text-[10px] text-slate-300 mt-0.5">당류 번개구름 발생</div>
+            <div class="text-[10px] text-slate-300 mt-0.5 font-medium">당류 번개구름 발생</div>
           </button>
         </div>
-        <p id="tutDemoNotice" class="text-[11px] text-emerald-400 font-bold mt-2 text-center hidden">
-          섬이 실시간으로 반응했습니다! 👆 위의 섬을 확인해 보세요.
+        <p id="tutDemoNotice" class="text-xs text-emerald-300 font-extrabold mt-2 text-center hidden">
+          👆 위의 섬이 실시간으로 반응했습니다! 확인해 보세요.
         </p>
       </div>
 
       <!-- 하단 네비게이션 -->
-      <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-800">
-        <span id="tutStepIndicator" class="text-xs font-bold text-slate-500">1 / 4 단계</span>
+      <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-800">
+        <span id="tutStepIndicator" class="text-xs font-bold text-slate-400">1 / 4 단계</span>
         <div class="flex gap-2">
-          <button onclick="skipTutorial()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white text-xs font-bold transition">
+          <button onclick="skipTutorial()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white text-xs font-bold transition">
             건너뛰기
           </button>
           <button id="btnTutNext" onclick="nextTutorialStep()" class="px-4 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black shadow-md transition">
@@ -1000,6 +1000,7 @@
     function startTutorial(manual = false) {
       tutStep = 0;
       updateTutorialStepUI();
+      document.getElementById("btnOpenRecord").classList.add("hidden");
       document.getElementById("tutorialOverlay").classList.remove("hidden");
     }
 
@@ -1040,10 +1041,12 @@
         const container = document.getElementById("creatureContainer");
         container.innerHTML = `
           <div class="creature-card flex flex-col items-center pointer-events-auto" style="bottom: 145px; left: 32%;">
-            <div class="px-2 py-0.5 rounded-full bg-slate-900 text-[10px] font-black border border-amber-400 text-amber-300 mb-0.5">가디언 베어</div>
+            <div class="px-2 py-0.5 rounded-full bg-slate-900 text-[10px] font-black border border-amber-400 text-amber-300 mb-0.5 shadow-md">가디언 베어</div>
             <div class="text-4xl animate-bounce">🐻</div>
           </div>
         `;
+        demoNotice.innerHTML = "👆 <b>단백질 파워!</b> 바위산이 커지고 가디언 베어가 나타났어요!";
+        demoNotice.className = "text-xs text-emerald-300 font-extrabold mt-2 text-center";
         if (window.confetti) confetti({ particleCount: 50, spread: 50 });
       } else {
         applyEnvironmentToUI({
@@ -1057,10 +1060,12 @@
         const container = document.getElementById("creatureContainer");
         container.innerHTML = `
           <div class="creature-card flex flex-col items-center pointer-events-auto" style="bottom: 145px; right: 30%;">
-            <div class="px-2 py-0.5 rounded-full bg-slate-900 text-[10px] font-black border border-amber-400 text-amber-300 mb-0.5">가디언 포키</div>
+            <div class="px-2 py-0.5 rounded-full bg-slate-900 text-[10px] font-black border border-amber-400 text-amber-300 mb-0.5 shadow-md">가디언 포키</div>
             <div class="text-4xl animate-bounce">🦔</div>
           </div>
         `;
+        demoNotice.innerHTML = "⚡ <b>당류 주의!</b> 하늘에 번개구름이 끼고 가디언 포키가 경보를 알립니다!";
+        demoNotice.className = "text-xs text-rose-300 font-extrabold mt-2 text-center";
       }
     }
 
@@ -1070,6 +1075,7 @@
         state.tutorialCompleted = true;
         saveState();
         document.getElementById("tutorialOverlay").classList.add("hidden");
+        document.getElementById("btnOpenRecord").classList.remove("hidden");
 
         // 가상 체험 상태를 깨끗이 씻어내고, 실제 사용자의 정상 보통 섬으로 복원!
         fetchEnvironmentAndRender();
@@ -1085,6 +1091,7 @@
       state.tutorialCompleted = true;
       saveState();
       document.getElementById("tutorialOverlay").classList.add("hidden");
+      document.getElementById("btnOpenRecord").classList.remove("hidden");
       fetchEnvironmentAndRender();
     }
   </script>
