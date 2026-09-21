@@ -12,27 +12,49 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
-    body {
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      background: #090d16;
+    html, body {
+      height: 100%;
+      width: 100%;
       margin: 0;
       padding: 0;
+      overflow: hidden;
+      background: #090d16;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
-    /* 모바일 프레임 컨테이너: 스마트폰에 최적화된 세로 뷰 */
+    /* 모바일 프레임 컨테이너: 가로세로 비율(9:18.5) 영구 고정 */
     .mobile-screen-wrapper {
-      max-width: 440px;
-      width: 100%;
-      min-height: 100vh;
-      margin: 0 auto;
-      background: #0f172a;
       position: relative;
+      aspect-ratio: 9 / 18.5;
+      height: 94vh;
+      max-height: 840px;
+      max-width: 415px;
+      width: auto;
+      background: #0f172a;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 0 50px rgba(0, 0, 0, 0.7);
+      border-radius: 32px;
+      border: 3px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.95);
+    }
+
+    /* 창 크기가 변해도 항상 9:18.5 비율을 유지하도록 처리 */
+    @media (max-aspect-ratio: 9/18.5) {
+      .mobile-screen-wrapper {
+        width: 94vw;
+        height: auto;
+        max-width: 415px;
+      }
+    }
+    @media (min-aspect-ratio: 9/18.5) {
+      .mobile-screen-wrapper {
+        height: 94vh;
+        width: auto;
+        max-height: 840px;
+      }
     }
 
     /* 4대 환경 2D 카툰 캔버스 뷰포트 */
@@ -41,7 +63,6 @@
       width: 100%;
       height: 100%;
       flex: 1;
-      min-height: 540px;
       overflow: hidden;
       transition: background 0.8s ease;
     }
@@ -388,20 +409,18 @@
 
     </main>
 
-  </div>
-
-  <!-- ================= 돋보기 진단 모달 (모바일 큰 글씨 최적화) ================= -->
-  <div id="inspectModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-      <button onclick="closeInspectModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold p-1">✕</button>
-      
-      <div class="flex items-center gap-3 mb-4">
-        <div id="inspectEmoji" class="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-3xl border border-slate-700 shrink-0">
-          ⛰️
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h3 id="inspectTitle" class="text-lg font-black text-white">중앙 든든 바위산</h3>
+    <!-- ================= 돋보기 진단 모달 (모바일 큰 글씨 최적화) ================= -->
+    <div id="inspectModal" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <button onclick="closeInspectModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold p-1">✕</button>
+        
+        <div class="flex items-center gap-3 mb-4">
+          <div id="inspectEmoji" class="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-3xl border border-slate-700 shrink-0">
+            ⛰️
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="inspectTitle" class="text-lg font-black text-white">중앙 든든 바위산</h3>
             <span id="inspectStatusBadge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">보통</span>
           </div>
           <p id="inspectNutrient" class="text-xs text-amber-400 font-bold mt-0.5">단백질 & 칼슘 상태</p>
@@ -435,7 +454,7 @@
   </div>
 
   <!-- ================= 실제 플레이 식단 등록 모달 (예시 식단 버튼 완전 배제, 순수 사진 전용) ================= -->
-  <div id="recordModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div id="recordModal" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 shadow-2xl relative">
       <button onclick="closeRecordModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold p-1">✕</button>
 
@@ -501,7 +520,7 @@
   </div>
 
   <!-- ================= 수호 크리처 등장 팡파레 모달 ================= -->
-  <div id="guardianJoinModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div id="guardianJoinModal" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border-2 border-amber-400/50 w-full max-w-sm rounded-3xl p-5 shadow-2xl text-center relative overflow-hidden animate-in zoom-in-90 duration-300">
       
       <div class="inline-block px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 font-extrabold text-xs mb-2.5 border border-amber-400/40">
@@ -540,7 +559,7 @@
   </div>
 
   <!-- ================= 튜토리얼 온보딩 오버레이 (섬이 100% 선명하게 보이는 하단 바텀시트 카드) ================= -->
-  <div id="tutorialOverlay" class="fixed inset-x-0 bottom-4 z-50 px-4 flex justify-center pointer-events-none hidden">
+  <div id="tutorialOverlay" class="absolute inset-x-0 bottom-3 z-50 px-3 flex justify-center pointer-events-none hidden">
     <div class="pointer-events-auto bg-slate-900/95 border-2 border-amber-400 w-full max-w-sm rounded-3xl p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.85)] text-slate-200 relative animate-in slide-in-from-bottom-5 duration-300">
       
       <div class="flex items-center gap-2.5 mb-2">
@@ -593,6 +612,8 @@
 
     </div>
   </div>
+
+  </div> <!-- /mobile-screen-wrapper -->
 
   <!-- ================= 클라이언트 로직 ================= -->
   <script>
