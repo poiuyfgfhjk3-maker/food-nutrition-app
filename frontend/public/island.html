@@ -2,13 +2,13 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>🏝️ Nutri-Island: 나만의 영양 마법의 섬</title>
   <!-- Google Fonts & Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&family=Gaegu:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -16,97 +16,115 @@
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
-      overflow-x: hidden;
+      background: #090d16;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 모바일 프레임 컨테이너: 스마트폰에 최적화된 세로 뷰 */
+    .mobile-screen-wrapper {
+      max-width: 440px;
+      width: 100%;
+      min-height: 100vh;
+      margin: 0 auto;
       background: #0f172a;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.7);
     }
 
-    .font-game {
-      font-family: 'Gaegu', cursive, sans-serif;
-    }
-
-    /* 4대 환경 2D 카툰 캔버스 영역 */
+    /* 4대 환경 2D 카툰 캔버스 뷰포트 */
     .island-viewport {
       position: relative;
       width: 100%;
-      height: calc(100vh - 72px);
-      min-height: 620px;
+      height: 100%;
+      flex: 1;
+      min-height: 540px;
       overflow: hidden;
       transition: background 0.8s ease;
     }
 
     /* 하늘 상태 */
-    .sky-sunny { background: linear-gradient(180deg, #1e90ff 0%, #70a1ff 45%, #a8e6cf 85%, #48dbfb 100%); }
-    .sky-dawn { background: linear-gradient(180deg, #2c3e50 0%, #4b6584 40%, #f39c12 85%, #f7d794 100%); }
+    .sky-sunny { background: linear-gradient(180deg, #1e90ff 0%, #70a1ff 40%, #a8e6cf 80%, #48dbfb 100%); }
     .sky-low { background: linear-gradient(180deg, #192a56 0%, #273c75 50%, #40739e 85%, #487eb0 100%); }
     .sky-heat { background: linear-gradient(180deg, #e84118 0%, #e17055 45%, #fab1a0 85%, #ffeaa7 100%); }
     .sky-storm { background: linear-gradient(180deg, #2d3436 0%, #4834d4 50%, #686de0 85%, #30336b 100%); }
 
-    /* 바다 애니메이션 */
+    /* 바다 파도 애니메이션 */
     .ocean-layer {
       position: absolute;
       bottom: 0;
       left: 0;
       width: 200%;
-      height: 180px;
+      height: 155px;
       background: #00cec9;
       opacity: 0.85;
-      border-radius: 1000px 1000px 0 0;
-      animation: wave 7s infinite linear alternate;
+      border-radius: 600px 600px 0 0;
+      animation: wave 6s infinite linear alternate;
+      z-index: 14;
     }
     .ocean-layer-back {
       position: absolute;
       bottom: 0;
-      left: -50%;
+      left: -40%;
       width: 200%;
-      height: 210px;
+      height: 180px;
       background: #0984e3;
       opacity: 0.65;
-      border-radius: 1200px 1200px 0 0;
-      animation: wave-back 10s infinite linear alternate;
+      border-radius: 700px 700px 0 0;
+      animation: wave-back 9s infinite linear alternate;
+      z-index: 13;
     }
     .ocean-flooded {
-      height: 260px !important;
+      height: 220px !important;
       background: #1e3799 !important;
       filter: drop-shadow(0 0 15px rgba(30, 55, 153, 0.8));
     }
 
     @keyframes wave {
       0% { transform: translateX(0) translateY(0); }
-      100% { transform: translateX(-80px) translateY(12px); }
+      100% { transform: translateX(-60px) translateY(10px); }
     }
     @keyframes wave-back {
       0% { transform: translateX(0) translateY(0); }
-      100% { transform: translateX(90px) translateY(8px); }
+      100% { transform: translateX(70px) translateY(6px); }
     }
 
-    /* 섬 대지 */
+    /* 섬 대지 (모바일 비율에 맞춘 둥근 언덕) */
     .island-ground {
       position: absolute;
-      bottom: 70px;
+      bottom: 75px;
       left: 50%;
       transform: translateX(-50%);
-      width: 90%;
-      max-width: 680px;
-      height: 280px;
+      width: 92%;
+      height: 250px;
       border-radius: 50% 50% 45% 45% / 70% 70% 30% 30%;
-      background: linear-gradient(180deg, #2ed573 0%, #10ac84 70%, #834c32 100%);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), inset 0 8px 16px rgba(255,255,255,0.3);
+      background: linear-gradient(180deg, #2ed573 0%, #10ac84 65%, #795548 100%);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 6px 12px rgba(255,255,255,0.3);
       cursor: pointer;
       transition: all 0.5s ease;
       z-index: 10;
+    }
+    .ground-normal {
+      background: linear-gradient(180deg, #2ed573 0%, #10ac84 65%, #795548 100%) !important;
+    }
+    .ground-blooming {
+      background: linear-gradient(180deg, #00b894 0%, #00cec9 65%, #6c5ce7 100%) !important;
     }
     .ground-wilted {
       background: linear-gradient(180deg, #d2b48c 0%, #b8860b 60%, #5d4037 100%) !important;
     }
 
-    /* 바위산 */
+    /* 중앙 바위산 */
     .mountain-peak {
       position: absolute;
-      bottom: 230px;
+      bottom: 215px;
       left: 50%;
       transform: translateX(-50%);
-      width: 260px;
-      height: 220px;
+      width: 220px;
+      height: 190px;
       clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
       background: linear-gradient(135deg, #747d8c 0%, #2f3542 100%);
       filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
@@ -114,43 +132,47 @@
       transition: all 0.5s ease;
       z-index: 8;
     }
+    .mountain-normal {
+      height: 185px;
+      background: linear-gradient(135deg, #8395a7 0%, #576574 100%) !important;
+    }
     .mountain-solid {
-      height: 270px;
-      background: linear-gradient(135deg, #a4b0be 0%, #57606f 50%, #ffa502 100%) !important;
+      height: 240px;
+      background: linear-gradient(135deg, #a4b0be 0%, #57606f 40%, #ffa502 100%) !important;
     }
     .mountain-weak {
-      height: 140px !important;
+      height: 125px !important;
       background: linear-gradient(135deg, #a5b1c2 0%, #778ca3 100%) !important;
-      opacity: 0.75;
+      opacity: 0.8;
     }
 
-    /* 수정/크리스탈 */
+    /* 황금 수정 광물 */
     .crystal-glow {
       position: absolute;
       top: 15px;
       left: 50%;
       transform: translateX(-50%);
-      width: 28px;
-      height: 48px;
+      width: 24px;
+      height: 42px;
       background: linear-gradient(180deg, #fff200, #ff9f1a);
       clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
       animation: pulse-glow 2s infinite ease-in-out;
     }
     @keyframes pulse-glow {
       0%, 100% { filter: drop-shadow(0 0 8px #fff200); transform: translateX(-50%) scale(1); }
-      50% { filter: drop-shadow(0 0 20px #ff3838); transform: translateX(-50%) scale(1.18); }
+      50% { filter: drop-shadow(0 0 18px #ff3838); transform: translateX(-50%) scale(1.15); }
     }
 
-    /* 해님 애니메이션 */
+    /* 태양 */
     .sun-disc {
       position: absolute;
-      top: 40px;
+      top: 30px;
       right: 12%;
-      width: 90px;
-      height: 90px;
+      width: 78px;
+      height: 78px;
       border-radius: 50%;
       background: radial-gradient(circle, #fffa65 20%, #ffaf40 80%);
-      box-shadow: 0 0 45px #ffaf40;
+      box-shadow: 0 0 35px #ffaf40;
       cursor: pointer;
       z-index: 5;
       animation: spin-sun 25s linear infinite;
@@ -160,11 +182,11 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* 구름 / 번개구름 */
+    /* 구름 */
     .cloud-cluster {
       position: absolute;
-      top: 60px;
-      left: 10%;
+      top: 45px;
+      left: 8%;
       cursor: pointer;
       z-index: 6;
       transition: all 0.5s ease;
@@ -172,10 +194,10 @@
     .cloud-puff {
       position: relative;
       background: #ffffff;
-      width: 140px;
-      height: 50px;
-      border-radius: 50px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      width: 120px;
+      height: 44px;
+      border-radius: 40px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
       animation: float-cloud 4s ease-in-out infinite alternate;
     }
     .cloud-puff::before, .cloud-puff::after {
@@ -184,453 +206,427 @@
       background: inherit;
       border-radius: 50%;
     }
-    .cloud-puff::before { width: 60px; height: 60px; top: -25px; left: 20px; }
-    .cloud-puff::after { width: 75px; height: 75px; top: -35px; right: 20px; }
+    .cloud-puff::before { width: 50px; height: 50px; top: -20px; left: 16px; }
+    .cloud-puff::after { width: 62px; height: 62px; top: -28px; right: 16px; }
 
     .cloud-storm .cloud-puff {
       background: #485460 !important;
-      box-shadow: 0 0 30px #5f27cd !important;
+      box-shadow: 0 0 25px #5f27cd !important;
     }
     .lightning-spark {
       position: absolute;
-      bottom: -30px;
+      bottom: -26px;
       left: 45%;
-      font-size: 26px;
+      font-size: 24px;
       animation: blink 0.8s infinite;
     }
     @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
     @keyframes float-cloud {
       0% { transform: translateY(0); }
-      100% { transform: translateY(12px); }
+      100% { transform: translateY(10px); }
     }
 
-    /* 7색 무지개 */
+    /* 무지개 아치 */
     .rainbow-arc {
       position: absolute;
-      top: 30px;
+      top: 20px;
       left: 5%;
-      width: 280px;
-      height: 140px;
-      border-radius: 140px 140px 0 0;
-      border: 10px solid transparent;
+      width: 240px;
+      height: 120px;
+      border-radius: 120px 120px 0 0;
+      border: 8px solid transparent;
       border-top-color: #ff3838;
       border-right-color: #ff9f1a;
       border-bottom-color: transparent;
       border-left-color: #2ed573;
-      filter: drop-shadow(0 0 10px rgba(255,255,255,0.6));
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.7));
       pointer-events: none;
       z-index: 5;
     }
 
-    /* 수호 크리처 (동물) 카드 & 애니메이션 */
+    /* 수호 크리처 카드 */
     .creature-card {
       position: absolute;
       z-index: 15;
       cursor: pointer;
       transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      animation: bounce-creature 2.5s infinite ease-in-out;
+      animation: bounce-creature 2.4s infinite ease-in-out;
     }
     .creature-card:hover {
-      transform: scale(1.22) translateY(-10px) !important;
+      transform: scale(1.18) translateY(-8px) !important;
     }
     @keyframes bounce-creature {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-14px); }
+      50% { transform: translateY(-12px); }
     }
 
-    /* 꽃 & 식물 장식 */
     .flower-item {
       position: absolute;
-      font-size: 24px;
+      font-size: 22px;
       animation: flower-sway 3s ease-in-out infinite alternate;
       z-index: 12;
       cursor: pointer;
     }
     @keyframes flower-sway {
-      0% { transform: rotate(-8deg); }
-      100% { transform: rotate(8deg); }
+      0% { transform: rotate(-7deg); }
+      100% { transform: rotate(7deg); }
     }
 
-    /* 인터랙션 돋보기 팝업 모달 */
-    .inspect-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 9999px;
-      font-size: 13px;
-      font-weight: 700;
+    /* 튜토리얼 하이라이트 */
+    .tut-pulse-border {
+      outline: 3px solid #fffa65;
+      outline-offset: 4px;
+      animation: pulse-border 1.5s infinite;
     }
-
-    /* 튜토리얼 스팟라이트 */
-    .tutorial-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.85);
-      z-index: 100;
-      backdrop-filter: blur(4px);
-    }
-    .spotlight-box {
-      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.82), 0 0 25px 6px #fffa65;
-      border-radius: 20px;
-      pointer-events: auto;
-      z-index: 105;
-      transition: all 0.4s ease;
+    @keyframes pulse-border {
+      0%, 100% { outline-color: #fffa65; box-shadow: 0 0 15px #fffa65; }
+      50% { outline-color: #ff9f1a; box-shadow: 0 0 25px #ff3838; }
     }
   </style>
 </head>
-<body class="text-white min-h-screen flex flex-col">
+<body class="text-white min-h-screen flex justify-center items-center">
 
-  <!-- ================= 상단 헤더 ================= -->
-  <header class="h-18 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 md:px-8 flex items-center justify-between z-30 sticky top-0">
-    <div class="flex items-center gap-3">
-      <div class="w-11 h-11 bg-gradient-to-tr from-amber-400 to-emerald-400 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/20">
-        🏝️
-      </div>
-      <div>
-        <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-300 via-emerald-300 to-sky-300 bg-clip-text text-transparent">
-          Nutri-Island
-        </h1>
-        <p class="text-xs text-slate-400 font-medium">영양 밸런스로 진화하는 나만의 생태계</p>
-      </div>
-    </div>
+  <!-- ================= 모바일 세로 프레임 래퍼 ================= -->
+  <div class="mobile-screen-wrapper">
 
-    <!-- 오늘 하루 4끼니 슬롯 현황 -->
-    <div class="hidden md:flex items-center gap-2 bg-slate-800/80 px-4 py-1.5 rounded-2xl border border-slate-700">
-      <span class="text-xs font-bold text-slate-400 mr-1">오늘의 기록:</span>
-      <div id="slot-breakfast" class="slot-badge flex items-center gap-1 text-xs px-2.5 py-1 rounded-xl bg-slate-700/60 text-slate-400 font-semibold cursor-pointer" onclick="viewMealDetail('breakfast')">
-        🌅 아침 <span class="slot-icon">⚪</span>
+    <!-- 상단 헤더 (모바일 가독성 향상: 글자 큼직하고 시원하게) -->
+    <header class="h-16 bg-slate-900/95 backdrop-blur px-4 flex items-center justify-between border-b border-slate-800 z-30 shrink-0">
+      <div class="flex items-center gap-2.5">
+        <span class="text-2xl">🏝️</span>
+        <div>
+          <h1 class="text-lg font-black tracking-tight text-white leading-none">Nutri-Island</h1>
+          <p class="text-[11px] text-emerald-400 font-semibold mt-0.5">나만의 영양 마법 섬</p>
+        </div>
       </div>
-      <div id="slot-lunch" class="slot-badge flex items-center gap-1 text-xs px-2.5 py-1 rounded-xl bg-slate-700/60 text-slate-400 font-semibold cursor-pointer" onclick="viewMealDetail('lunch')">
-        🍱 점심 <span class="slot-icon">⚪</span>
+
+      <div class="flex items-center gap-2">
+        <button onclick="startTutorial(true)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1">
+          <span>❓</span> 튜토리얼
+        </button>
+        <button onclick="resetDayData()" title="오늘 데이터 초기화" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-400 text-xs transition border border-slate-700">
+          🔄
+        </button>
+        <a href="/" class="p-1.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold transition border border-slate-700" title="성인용 정밀 분석기로 이동">
+          🔬
+        </a>
       </div>
-      <div id="slot-dinner" class="slot-badge flex items-center gap-1 text-xs px-2.5 py-1 rounded-xl bg-slate-700/60 text-slate-400 font-semibold cursor-pointer" onclick="viewMealDetail('dinner')">
-        🌙 저녁 <span class="slot-icon">⚪</span>
-      </div>
-      <div id="slot-snack" class="slot-badge flex items-center gap-1 text-xs px-2.5 py-1 rounded-xl bg-slate-700/60 text-slate-400 font-semibold cursor-pointer" onclick="viewMealDetail('snack')">
-        🍪 간식 <span class="slot-icon">⚪</span>
-      </div>
-    </div>
+    </header>
 
-    <!-- 유틸리티 버튼들 -->
-    <div class="flex items-center gap-2">
-      <button onclick="startTutorial(true)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-amber-300 border border-slate-700 flex items-center gap-1.5 transition">
-        <span>❓</span> 가이드
-      </button>
-      <button onclick="resetDayData()" title="오늘 데이터 초기화" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-rose-400 text-xs transition border border-slate-700">
-        🔄
-      </button>
-      <a href="/" class="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition flex items-center gap-1">
-        <span>🔬</span> 성인 정밀 분석기
-      </a>
-    </div>
-  </header>
-
-  <!-- ================= 메인 2D 섬 뷰포트 ================= -->
-  <main class="flex-1 relative island-viewport sky-sunny" id="islandViewport">
-    
-    <!-- 무지개 아치 (당류 밸런스 최상일 때 표시) -->
-    <div id="rainbowArc" class="rainbow-arc hidden"></div>
-
-    <!-- 1. 하늘 태양 영역 (클릭 가능) -->
-    <div id="sunArea" class="sun-disc" onclick="inspectEnvironment('sun')" title="태양 에너지 터치">
-      <div class="w-full h-full flex items-center justify-center text-3xl select-none" id="sunEmoji">☀️</div>
-    </div>
-
-    <!-- 2. 하늘 구름 영역 (클릭 가능) -->
-    <div id="cloudArea" class="cloud-cluster" onclick="inspectEnvironment('cloud')" title="날씨 & 당류 터치">
-      <div class="cloud-puff relative">
-        <span id="stormLightning" class="lightning-spark hidden">⚡</span>
+    <!-- 끼니 현황 바 (아침/점심/저녁/간식) -->
+    <div class="bg-slate-900/80 px-3 py-2 border-b border-slate-800/80 flex items-center justify-between z-20 shrink-0">
+      <div class="text-xs font-bold text-slate-400">식단 기록 현황:</div>
+      <div class="flex items-center gap-1.5">
+        <div id="slot-breakfast" onclick="viewMealDetail('breakfast')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
+          아침 <span class="slot-icon">⚪</span>
+        </div>
+        <div id="slot-lunch" onclick="viewMealDetail('lunch')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
+          점심 <span class="slot-icon">⚪</span>
+        </div>
+        <div id="slot-dinner" onclick="viewMealDetail('dinner')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
+          저녁 <span class="slot-icon">⚪</span>
+        </div>
+        <div id="slot-snack" onclick="viewMealDetail('snack')" class="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer">
+          간식 <span class="slot-icon">⚪</span>
+        </div>
       </div>
     </div>
 
-    <!-- 3. 중앙 튼튼 바위산 영역 (클릭 가능) -->
-    <div id="mountainArea" class="mountain-peak mountain-solid" onclick="inspectEnvironment('mountain')" title="중앙 튼튼 바위산 터치">
-      <div id="crystalGlow" class="crystal-glow"></div>
-    </div>
+    <!-- ================= 메인 섬 뷰포트 ================= -->
+    <main class="island-viewport sky-sunny" id="islandViewport">
+      
+      <!-- 무지개 아치 -->
+      <div id="rainbowArc" class="rainbow-arc hidden"></div>
 
-    <!-- 4. 대지 및 만개한 정원 (클릭 가능) -->
-    <div id="groundArea" class="island-ground" onclick="inspectEnvironment('meadow')" title="대지 & 꽃밭 터치">
-      <!-- 동적 꽃밭 장식들 -->
-      <div id="flowerContainer" class="w-full h-full relative pointer-events-none">
-        <span class="flower-item" style="bottom: 45px; left: 15%;">🌸</span>
-        <span class="flower-item" style="bottom: 60px; left: 28%;">🌺</span>
-        <span class="flower-item" style="bottom: 35px; right: 22%;">🌼</span>
-        <span class="flower-item" style="bottom: 50px; right: 38%;">🌷</span>
-        <span class="flower-item" style="bottom: 75px; left: 45%;">🌻</span>
+      <!-- 1. 하늘 태양 영역 -->
+      <div id="sunArea" class="sun-disc" onclick="inspectEnvironment('sun')" title="태양 에너지 터치">
+        <div class="w-full h-full flex items-center justify-center text-3xl select-none" id="sunEmoji">☀️</div>
       </div>
-    </div>
 
-    <!-- 바다 파도 레이어 (클릭 가능) -->
-    <div id="oceanBack" class="ocean-layer-back"></div>
-    <div id="oceanFront" class="ocean-layer cursor-pointer" onclick="inspectEnvironment('ocean')" title="바다 & 나트륨 터치"></div>
+      <!-- 2. 하늘 구름 영역 -->
+      <div id="cloudArea" class="cloud-cluster" onclick="inspectEnvironment('cloud')" title="날씨 & 당류 터치">
+        <div class="cloud-puff relative">
+          <span id="stormLightning" class="lightning-spark hidden">⚡</span>
+        </div>
+      </div>
 
-    <!-- 5. 섬 위에 등장한 수호 크리처들 렌더링 컨테이너 -->
-    <div id="creatureContainer" class="absolute inset-0 pointer-events-none z-20">
-      <!-- 동적으로 수호 동물들이 위치함 -->
-    </div>
+      <!-- 3. 중앙 든든 바위산 영역 (처음에도 보통의 든든한 산으로 조성) -->
+      <div id="mountainArea" class="mountain-peak mountain-normal" onclick="inspectEnvironment('mountain')" title="중앙 든든 바위산 터치">
+        <div id="crystalGlow" class="crystal-glow"></div>
+      </div>
 
-    <!-- 섬 안내 힌트 토스트 -->
-    <div class="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-700 text-xs font-semibold text-slate-200 flex items-center gap-2 shadow-xl z-20 pointer-events-none">
-      <span class="animate-pulse text-amber-400">💡</span>
-      <span>섬의 <b>하늘, 바위산, 꽃밭, 바다</b>를 터치하면 영양 상태를 진단할 수 있어요!</span>
-    </div>
+      <!-- 4. 대지 & 꽃밭 (처음에도 싱그러운 초록 잔디로 조성) -->
+      <div id="groundArea" class="island-ground ground-normal" onclick="inspectEnvironment('meadow')" title="대지 & 꽃밭 터치">
+        <div id="flowerContainer" class="w-full h-full relative pointer-events-none">
+          <span class="flower-item" style="bottom: 40px; left: 14%;">🌸</span>
+          <span class="flower-item" style="bottom: 55px; left: 28%;">🌺</span>
+          <span class="flower-item" style="bottom: 30px; right: 20%;">🌼</span>
+          <span class="flower-item" style="bottom: 45px; right: 36%;">🌷</span>
+        </div>
+      </div>
 
-    <!-- ================= 하단 플로팅 액션 버튼 (식단 등록) ================= -->
-    <div class="absolute bottom-6 right-6 z-30">
-      <button id="btnOpenRecord" onclick="openRecordModal()" class="px-6 py-4 rounded-3xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-white font-extrabold text-base md:text-lg shadow-2xl shadow-emerald-500/50 flex items-center gap-3 transform hover:scale-105 active:scale-95 transition border-2 border-white/30">
-        <span class="text-2xl animate-bounce">📸</span>
-        <span>오늘 식단 기록하기</span>
-      </button>
-    </div>
+      <!-- 바다 파도 레이어 -->
+      <div id="oceanBack" class="ocean-layer-back"></div>
+      <div id="oceanFront" class="ocean-layer cursor-pointer" onclick="inspectEnvironment('ocean')" title="바다 & 나트륨 터치"></div>
 
-  </main>
+      <!-- 섬 위에 등장한 수호 크리처들 컨테이너 -->
+      <div id="creatureContainer" class="absolute inset-0 pointer-events-none z-20"></div>
 
-  <!-- ================= 돋보기 인터랙션 모달 (환경 진단 & DB 추천 식단) ================= -->
+      <!-- 조작 힌트 토스트 (큼직한 폰트) -->
+      <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-700 text-xs font-bold text-slate-200 flex items-center gap-1.5 shadow-lg z-20 pointer-events-none whitespace-nowrap">
+        <span class="text-amber-400">👆</span>
+        <span>하늘, 바위산, 꽃밭, 바다를 탭해 보세요!</span>
+      </div>
+
+      <!-- ================= 하단 플로팅 액션 버튼 (식단 등록) ================= -->
+      <!-- 사용자의 지시에 맞춰 '오늘 식단 기록하기' 버튼 크기는 적정 크기 유지 -->
+      <div class="absolute bottom-5 right-4 z-30">
+        <button id="btnOpenRecord" onclick="openRecordModal()" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-white font-extrabold text-sm shadow-xl shadow-emerald-500/40 flex items-center gap-2 transform active:scale-95 transition border border-white/30">
+          <span class="text-xl animate-bounce">📸</span>
+          <span>오늘 식단 기록하기</span>
+        </button>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ================= 돋보기 진단 모달 (모바일 큰 글씨 최적화) ================= -->
   <div id="inspectModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl p-6 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-      <button onclick="closeInspectModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-xl p-1 font-bold">✕</button>
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <button onclick="closeInspectModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold p-1">✕</button>
       
       <div class="flex items-center gap-3 mb-4">
-        <div id="inspectEmoji" class="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-3xl border border-slate-700">
+        <div id="inspectEmoji" class="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-3xl border border-slate-700 shrink-0">
           ⛰️
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h3 id="inspectTitle" class="text-lg font-bold text-white">중앙 튼튼 바위산</h3>
-            <span id="inspectStatusBadge" class="inspect-badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">견고함</span>
+            <h3 id="inspectTitle" class="text-lg font-black text-white">중앙 든든 바위산</h3>
+            <span id="inspectStatusBadge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">보통</span>
           </div>
-          <p id="inspectNutrient" class="text-xs text-amber-400 font-semibold mt-0.5">단백질 32.0g / 칼슘 180.0mg</p>
+          <p id="inspectNutrient" class="text-xs text-amber-400 font-bold mt-0.5">단백질 & 칼슘 상태</p>
         </div>
       </div>
 
-      <!-- 과학적 원리 설명 카드 -->
-      <div class="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/80 mb-4">
-        <div class="text-xs font-bold text-emerald-400 mb-1 flex items-center gap-1.5">
+      <!-- 과학적 원리 설명 카드 (글자 크기 확대: text-sm, 15px급) -->
+      <div class="bg-slate-800/90 rounded-2xl p-4 border border-slate-700 mb-3.5">
+        <div class="text-xs font-black text-emerald-400 mb-1.5 flex items-center gap-1.5">
           <span>🔬</span> 왜 이런 상태일까요?
         </div>
-        <p id="inspectDescription" class="text-sm text-slate-200 leading-relaxed">
-          단백질과 칼슘이 풍부하여 바위산이 높고 견고하게 솟았으며, 황금 수정이 단단하게 빛납니다!
+        <p id="inspectDescription" class="text-[14px] text-slate-100 leading-relaxed font-medium">
+          기본 형태의 든든한 바위산입니다. 고기, 생선, 달걀, 우유를 골고루 먹으면 더욱 높고 웅장해지며 황금 수정이 빛납니다!
         </p>
       </div>
 
       <!-- 식약처 DB 기반 추천 식단 리스트 -->
       <div>
-        <div class="text-xs font-bold text-amber-400 mb-2.5 flex items-center gap-1.5">
-          <span>🍽️</span> 식약처 DB 기반 맞춤 추천 식단
+        <div class="text-xs font-black text-amber-400 mb-2 flex items-center gap-1.5">
+          <span>🍽️</span> 식약처 DB 기반 맞춤 추천 음식
         </div>
-        <div id="inspectRecommendations" class="space-y-2">
-          <!-- 추천 아이템들이 동적으로 주입됨 -->
-        </div>
+        <div id="inspectRecommendations" class="space-y-2"></div>
       </div>
 
-      <div class="mt-6 pt-4 border-t border-slate-800 flex justify-end">
-        <button onclick="closeInspectModal()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200 transition">
+      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+        <button onclick="closeInspectModal()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200 transition">
           확인 완료
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ================= 식단 기록 모달 ================= -->
+  <!-- ================= 실제 플레이 식단 등록 모달 (예시 식단 버튼 완전 배제, 순수 사진 전용) ================= -->
   <div id="recordModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl p-6 shadow-2xl relative">
-      <button onclick="closeRecordModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-xl p-1 font-bold">✕</button>
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 shadow-2xl relative">
+      <button onclick="closeRecordModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold p-1">✕</button>
 
-      <div class="text-center mb-5">
-        <div class="w-14 h-14 mx-auto mb-2 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-3xl border border-emerald-500/30">
+      <div class="text-center mb-4">
+        <div class="w-12 h-12 mx-auto mb-1.5 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl border border-emerald-500/30">
           📸
         </div>
-        <h3 class="text-xl font-extrabold text-white">식사 사진 기록하기</h3>
-        <p class="text-xs text-slate-400 mt-1">식사를 기록하면 수호 크리처가 찾아오고 섬이 진화해요!</p>
+        <h3 class="text-lg font-black text-white">식사 사진 기록하기</h3>
+        <p class="text-xs text-slate-300 mt-0.5">내가 먹은 음식 사진을 찍으면 수호 크리처가 찾아옵니다!</p>
       </div>
 
-      <!-- 1. 끼니 선택 -->
-      <div class="mb-4">
-        <label class="block text-xs font-bold text-slate-300 mb-2">기록할 끼니를 선택해 주세요:</label>
-        <div class="grid grid-cols-4 gap-2">
-          <button type="button" onclick="selectMealType('breakfast')" id="mbtn-breakfast" class="meal-btn p-2 rounded-2xl bg-slate-800 border-2 border-transparent text-xs font-bold text-slate-300 hover:bg-slate-750 transition flex flex-col items-center gap-1">
-            <span class="text-lg">🌅</span> 아침
+      <!-- 끼니 선택 -->
+      <div class="mb-3.5">
+        <label class="block text-xs font-bold text-slate-300 mb-1.5">기록할 끼니 선택:</label>
+        <div class="grid grid-cols-4 gap-1.5">
+          <button type="button" onclick="selectMealType('breakfast')" id="mbtn-breakfast" class="meal-btn py-2 rounded-xl bg-slate-800 border border-transparent text-xs font-bold text-slate-300 transition flex flex-col items-center gap-0.5">
+            <span>🌅</span> 아침
           </button>
-          <button type="button" onclick="selectMealType('lunch')" id="mbtn-lunch" class="meal-btn p-2 rounded-2xl bg-emerald-600/30 border-2 border-emerald-500 text-xs font-bold text-emerald-300 transition flex flex-col items-center gap-1">
-            <span class="text-lg">🍱</span> 점심
+          <button type="button" onclick="selectMealType('lunch')" id="mbtn-lunch" class="meal-btn py-2 rounded-xl bg-emerald-600/30 border border-emerald-500 text-xs font-bold text-emerald-300 transition flex flex-col items-center gap-0.5">
+            <span>🍱</span> 점심
           </button>
-          <button type="button" onclick="selectMealType('dinner')" id="mbtn-dinner" class="meal-btn p-2 rounded-2xl bg-slate-800 border-2 border-transparent text-xs font-bold text-slate-300 hover:bg-slate-750 transition flex flex-col items-center gap-1">
-            <span class="text-lg">🌙</span> 저녁
+          <button type="button" onclick="selectMealType('dinner')" id="mbtn-dinner" class="meal-btn py-2 rounded-xl bg-slate-800 border border-transparent text-xs font-bold text-slate-300 transition flex flex-col items-center gap-0.5">
+            <span>🌙</span> 저녁
           </button>
-          <button type="button" onclick="selectMealType('snack')" id="mbtn-snack" class="meal-btn p-2 rounded-2xl bg-slate-800 border-2 border-transparent text-xs font-bold text-slate-300 hover:bg-slate-750 transition flex flex-col items-center gap-1">
-            <span class="text-lg">🍪</span> 간식
+          <button type="button" onclick="selectMealType('snack')" id="mbtn-snack" class="meal-btn py-2 rounded-xl bg-slate-800 border border-transparent text-xs font-bold text-slate-300 transition flex flex-col items-center gap-0.5">
+            <span>🍪</span> 간식
           </button>
         </div>
       </div>
 
-      <!-- 2. 사진 파일 업로드 or 촬영 -->
+      <!-- 실제 사진 등록 (카메라/앨범) -->
       <div class="mb-4">
-        <label class="block text-xs font-bold text-slate-300 mb-2">음식 사진 등록:</label>
+        <label class="block text-xs font-bold text-slate-300 mb-1.5">음식 사진 (직접 촬영 또는 앨범):</label>
         <input type="file" id="mealImageInput" accept="image/*" class="hidden" onchange="handleImageSelected(event)">
         
-        <div onclick="document.getElementById('mealImageInput').click()" class="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-2xl p-4 text-center cursor-pointer bg-slate-800/50 hover:bg-slate-800 transition">
+        <div onclick="document.getElementById('mealImageInput').click()" class="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-2xl p-5 text-center cursor-pointer bg-slate-800/40 hover:bg-slate-800 transition">
           <div id="uploadPlaceholder">
             <div class="text-3xl mb-1">📷</div>
-            <div class="text-xs font-bold text-slate-300">카메라로 촬영하거나 사진 선택</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">JPG, PNG 파일 지원</div>
+            <div class="text-sm font-bold text-slate-200">카메라 촬영 또는 갤러리 선택</div>
+            <div class="text-xs text-slate-400 mt-1">식판, 접시, 음식 사진을 올려주세요</div>
           </div>
           <div id="imagePreviewContainer" class="hidden">
-            <img id="imagePreview" src="" alt="식단 미리보기" class="max-h-36 mx-auto rounded-xl object-contain shadow-md">
-            <div class="text-[11px] text-emerald-400 font-bold mt-2">사진이 선택되었습니다. (클릭하여 변경)</div>
+            <img id="imagePreview" src="" alt="식단 미리보기" class="max-h-40 mx-auto rounded-xl object-contain shadow-md">
+            <div class="text-xs text-emerald-400 font-bold mt-2">사진이 선택되었습니다. (터치하여 변경)</div>
           </div>
         </div>
       </div>
 
-      <!-- 3. 빠른 체험용 샘플 식단 버튼 (사진이 없을 때 바로 테스트!) -->
-      <div class="mb-5 pt-3 border-t border-slate-800">
-        <div class="text-[11px] font-bold text-amber-400 mb-2 flex items-center justify-between">
-          <span>💡 사진이 없다면? 예시 식단으로 바로 체험:</span>
-        </div>
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <button onclick="submitDemoMeal('balanced_lunch')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-left border border-slate-700 transition">
-            <div class="font-bold text-emerald-300">🍱 불고기 백반</div>
-            <div class="text-[10px] text-slate-400">단백질 & 비타민 균형</div>
-          </button>
-          <button onclick="submitDemoMeal('protein_breakfast')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-left border border-slate-700 transition">
-            <div class="font-bold text-amber-300">🥪 토스트 & 우유</div>
-            <div class="text-[10px] text-slate-400">칼슘 & 든든한 단백질</div>
-          </button>
-          <button onclick="submitDemoMeal('fruit_snack')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-left border border-slate-700 transition">
-            <div class="font-bold text-purple-300">🍓 딸기 바나나 보울</div>
-            <div class="text-[10px] text-slate-400">비타민 C 상큼 활력</div>
-          </button>
-          <button onclick="submitDemoMeal('sweet_snack')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-left border border-slate-700 transition">
-            <div class="font-bold text-rose-400">🍩 초코도넛 & 탄산</div>
-            <div class="text-[10px] text-slate-400">당류 주의 & 번개구름</div>
-          </button>
-        </div>
-      </div>
-
-      <!-- 등록 실행 버튼 -->
+      <!-- 분석 제출 버튼 -->
       <button id="btnSubmitMeal" onclick="submitRealMeal()" class="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/30 transition flex items-center justify-center gap-2">
         <span>🔍</span>
-        <span>AI 영양 분석 및 수호자 부르기</span>
+        <span>AI 영양 분석 및 수호 크리처 부르기</span>
       </button>
 
       <!-- 분석 로딩 오버레이 -->
       <div id="analyzingLoader" class="absolute inset-0 bg-slate-900/95 backdrop-blur rounded-3xl flex flex-col items-center justify-center p-6 hidden">
         <div class="text-5xl animate-bounce mb-3">🔍</div>
         <h4 class="text-base font-extrabold text-white">식단 데이터를 분석하고 있어요...</h4>
-        <p class="text-xs text-slate-400 text-center mt-1">식약처 34.5만 건 DB와 대조하여<br>어떤 수호 크리처가 놀러올지 찾고 있습니다!</p>
+        <p class="text-xs text-slate-300 text-center mt-1">식약처 34.5만 건 DB와 정밀 대조하여<br>어떤 수호 크리처가 반응하는지 찾고 있습니다!</p>
       </div>
 
     </div>
   </div>
 
-  <!-- ================= 수호 크리처 합류 & 식단 분석 결과 팡파레 모달 ================= -->
+  <!-- ================= 수호 크리처 등장 팡파레 모달 ================= -->
   <div id="guardianJoinModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border-2 border-amber-400/50 w-full max-w-md rounded-3xl p-6 shadow-2xl text-center relative overflow-hidden animate-in zoom-in-90 duration-300">
+    <div class="bg-slate-900 border-2 border-amber-400/50 w-full max-w-sm rounded-3xl p-5 shadow-2xl text-center relative overflow-hidden animate-in zoom-in-90 duration-300">
       
-      <div class="inline-block px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 font-extrabold text-xs mb-3 border border-amber-400/40">
+      <div class="inline-block px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 font-extrabold text-xs mb-2.5 border border-amber-400/40">
         🎉 새로운 수호 크리처 합류!
       </div>
 
-      <div id="gModalEmoji" class="w-24 h-24 mx-auto mb-3 rounded-3xl bg-slate-800 flex items-center justify-center text-6xl shadow-xl border border-slate-700 animate-bounce">
+      <div id="gModalEmoji" class="w-20 h-20 mx-auto mb-2 rounded-3xl bg-slate-800 flex items-center justify-center text-5xl shadow-xl border border-slate-700 animate-bounce">
         🐻
       </div>
 
-      <h3 id="gModalName" class="text-2xl font-black text-white">가디언 베어</h3>
+      <h3 id="gModalName" class="text-xl font-black text-white">가디언 베어</h3>
       <p id="gModalRole" class="text-xs font-bold text-amber-400 mt-0.5">단백질 수호자 (단단한 근육과 성장 파워)</p>
 
-      <!-- 크리처 대사 말풍선 -->
-      <div class="bg-slate-800/90 rounded-2xl p-3.5 border border-slate-700 my-4 text-left">
-        <div class="text-[11px] font-bold text-emerald-400 mb-1 flex items-center gap-1">
+      <div class="bg-slate-800/90 rounded-2xl p-3.5 border border-slate-700 my-3 text-left">
+        <div class="text-xs font-black text-emerald-400 mb-1 flex items-center gap-1">
           <span>💬</span> 크리처의 한마디:
         </div>
-        <p id="gModalQuote" class="text-xs text-slate-200 leading-relaxed font-medium">
-          "단백질 파워 완충! 튼튼한 바위산과 건강한 체력을 지켜줄게요."
+        <p id="gModalQuote" class="text-[13px] text-slate-100 leading-relaxed font-semibold">
+          "단백질 파워 충전 완료! 튼튼한 바위산과 건강한 체력을 지켜줄게요."
         </p>
       </div>
 
-      <!-- 영양 섭취 요약 -->
-      <div class="bg-slate-800/50 rounded-xl p-3 border border-slate-800 text-left mb-4">
-        <div class="text-[11px] font-bold text-slate-400 mb-1">식단 분석 결과:</div>
-        <div id="gModalFoods" class="text-xs font-semibold text-white">소불고기, 달걀말이, 시금치나물</div>
-        <div id="gModalAdvice" class="text-xs text-amber-300/90 mt-1 font-medium">
-          다음 식사에는 샐러드나 나물을 곁들이면 정원이 더 푸르러질 거예요!
+      <div class="bg-slate-800/50 rounded-xl p-2.5 border border-slate-800 text-left mb-3.5">
+        <div class="text-[11px] font-bold text-slate-400">인식된 음식:</div>
+        <div id="gModalFoods" class="text-xs font-bold text-white">소불고기, 달걀말이, 시금치나물</div>
+        <div id="gModalAdvice" class="text-xs text-amber-300 mt-1 font-semibold">
+          💡 다음 식사에는 신선한 채소를 한 접시 곁들이면 꽃밭이 더 만개할 거예요!
         </div>
       </div>
 
-      <button onclick="closeGuardianModalAndApply()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-base shadow-xl transition">
+      <button onclick="closeGuardianModalAndApply()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-base shadow-xl transition">
         🏝️ 내 섬으로 데려가기!
       </button>
 
     </div>
   </div>
 
-  <!-- ================= 튜토리얼 온보딩 오버레이 ================= -->
-  <div id="tutorialOverlay" class="tutorial-overlay flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-amber-400/40 w-full max-w-lg rounded-3xl p-6 shadow-2xl text-slate-200 relative">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-12 h-12 bg-amber-400/20 text-amber-400 rounded-2xl flex items-center justify-center text-2xl border border-amber-400/30">
+  <!-- ================= 튜토리얼 온보딩 오버레이 (가상 식단 시뮬레이션 탑재) ================= -->
+  <div id="tutorialOverlay" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-amber-400/50 w-full max-w-sm rounded-3xl p-5 shadow-2xl text-slate-200 relative animate-in fade-in zoom-in-95 duration-200">
+      
+      <div class="flex items-center gap-2.5 mb-2.5">
+        <div class="w-10 h-10 bg-amber-400/20 text-amber-300 rounded-2xl flex items-center justify-center text-xl border border-amber-400/30 shrink-0">
           ✨
         </div>
         <div>
-          <div class="text-[11px] font-bold text-amber-400">NUTRI-ISLAND ONBOARDING</div>
-          <h3 id="tutTitle" class="text-lg font-bold text-white">환영합니다!</h3>
+          <div class="text-[10px] font-black text-amber-400 tracking-wider">NUTRI-ISLAND 가이드</div>
+          <h3 id="tutTitle" class="text-base font-black text-white">환영합니다!</h3>
         </div>
       </div>
 
-      <p id="tutMessage" class="text-sm text-slate-300 leading-relaxed min-h-[60px] py-1">
-        환영합니다! 이곳은 여러분의 하루 식사 데이터로 환경이 만들어지는 가상 생태계, Nutri-Island입니다.
-      </p>
+      <!-- 설명 본문 (글자 큼직하고 명확하게: 14~15px급) -->
+      <div id="tutMessage" class="text-[14px] text-slate-200 leading-relaxed min-h-[70px] py-1 font-medium">
+        환영합니다! 이곳은 여러분의 하루 식단과 영양 밸런스에 따라 진화하는 가상 생태계, Nutri-Island입니다.
+      </div>
 
-      <div class="flex items-center justify-between mt-5 pt-3 border-t border-slate-800">
+      <!-- 튜토리얼 3단계 전용: 가상 예시 식단 체험 버튼 박스 -->
+      <div id="tutDemoBox" class="my-3 p-3 bg-slate-800/90 rounded-2xl border border-slate-700 hidden">
+        <div class="text-xs font-black text-amber-300 mb-2 flex items-center gap-1">
+          <span>🧪</span> 가상 예시 식단을 터치해 보세요:
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="simulateTutorialMeal('balanced')" class="p-2.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/50 text-left transition active:scale-95">
+            <div class="text-xs font-extrabold text-emerald-300">🍱 단백질 백반</div>
+            <div class="text-[10px] text-slate-300 mt-0.5">바위산 쑥쑥 & 곰 출현</div>
+          </button>
+          <button onclick="simulateTutorialMeal('sweet')" class="p-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 border border-rose-500/50 text-left transition active:scale-95">
+            <div class="text-xs font-extrabold text-rose-300">🍩 초코도넛 & 탄산</div>
+            <div class="text-[10px] text-slate-300 mt-0.5">당류 번개구름 발생</div>
+          </button>
+        </div>
+        <p id="tutDemoNotice" class="text-[11px] text-emerald-400 font-bold mt-2 text-center hidden">
+          섬이 실시간으로 반응했습니다! 👆 위의 섬을 확인해 보세요.
+        </p>
+      </div>
+
+      <!-- 하단 네비게이션 -->
+      <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-800">
         <span id="tutStepIndicator" class="text-xs font-bold text-slate-500">1 / 4 단계</span>
         <div class="flex gap-2">
-          <button onclick="skipTutorial()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white text-xs font-bold transition">
+          <button onclick="skipTutorial()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white text-xs font-bold transition">
             건너뛰기
           </button>
-          <button id="btnTutNext" onclick="nextTutorialStep()" class="px-5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold shadow-md transition">
+          <button id="btnTutNext" onclick="nextTutorialStep()" class="px-4 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black shadow-md transition">
             다음 ➡️
           </button>
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- ================= 클라이언트 상태 관리 및 인터랙션 스크립트 ================= -->
+  <!-- ================= 클라이언트 로직 ================= -->
   <script>
-    // 현재 세션 상태 (Local Storage 기반 영구 보존)
-    const STORAGE_KEY = "nutri_island_v1_state";
+    const STORAGE_KEY = "nutri_island_v2_state";
     let state = {
       tutorialCompleted: false,
       selectedMealType: "lunch",
-      meals: {}, // { breakfast: { ... }, lunch: { ... } }
-      guardians: [], // [ { id: 'bear', name: '가디언 베어', emoji: '🐻', ... } ]
+      meals: {},
+      guardians: [],
       cumulativeNutrition: {
         calories: 0, carbohydrates: 0, protein: 0, fat: 0, sugar: 0, sodium: 0,
         minerals: { calcium: 0, iron: 0, magnesium: 0, potassium: 0, zinc: 0 },
         vitamins: { fiber: 0, vitamin_a: 0, vitamin_c: 0, vitamin_d: 0, folate: 0 }
       },
-      currentEnv: null,
-      lastAnalyzedData: null
+      currentEnv: null
     };
 
-    // 튜토리얼 스텝 데이터
     let tutStep = 0;
     const TUTORIAL_STEPS = [
       {
-        title: "환영합니다! 🏝️",
-        msg: "이곳은 여러분의 하루 식단과 영양 밸런스에 따라 진화하는 가상 생태계, <b>Nutri-Island</b>입니다. 지금은 첫 시작이라 평화롭고 조용한 섬 상태예요."
+        title: "평화로운 기본 섬 🏝️",
+        msg: "환영합니다! 지금 보시는 곳은 여러분만의 마법의 섬 <b>Nutri-Island</b>입니다.<br>처음 시작할 때도 싱그러운 초록 잔디와 든든한 바위산이 갖춰진 <b>보통의 평화로운 섬</b>에서 출발해요!"
       },
       {
         title: "신체와 연결된 4대 환경 🔬",
-        msg: "섬의 각 구역은 실제 여러분 몸의 영양 상태와 직접 연결되어 있어요! <b>중앙 바위산(단백질/칼슘), 꽃밭(비타민), 하늘(에너지/당류), 바다(나트륨)</b>를 탭하면 왜 그런지 원인과 추천 식단을 볼 수 있습니다."
+        msg: "섬의 각 구역은 실제 여러분 몸의 영양소와 연결되어 있어요!<br><b>바위산(단백질/칼슘), 꽃밭(비타민), 하늘(에너지/당류), 바다(나트륨)</b>를 직접 탭하면 자세한 영양 분석과 식약처 DB 추천 음식을 확인할 수 있습니다."
       },
       {
-        title: "식단을 기록하고 친구를 맞이해요 📸",
-        msg: "골고루 밥을 먹고 사진을 등록하면, 영양소에 반응해 <b>수호 크리처(가디언 동물 친구)</b>가 섬으로 놀러와 함께 살아가게 됩니다!"
+        title: "식단에 따른 변화 체험 🧪",
+        msg: "내가 먹은 음식에 따라 섬이 어떻게 변할까요?<br>아래의 <b>가상 예시 식단 버튼</b>을 탭해서 바위산이 커지거나 번개구름이 끼는 모습을 직접 관찰해 보세요! (체험용이며 실제 섬에는 반영되지 않아요)"
       },
       {
-        title: "첫 식단을 등록해 볼까요? 🚀",
-        msg: "우측 하단의 <b>[📸 오늘 식단 기록하기]</b> 버튼을 누르면 직접 사진을 찍거나, 준비된 예시 식단으로 즉시 체험해볼 수 있어요. 지금 바로 시작해 보세요!"
+        title: "나만의 진짜 섬 만들기! 🚀",
+        msg: "체험이 끝났습니다! 가상 섬은 초기화되며, 이제 <b>여러분이 직접 먹은 실제 식사 사진</b>을 올려 나만의 수호 크리처를 만나고 섬을 성장시켜 보세요!"
       }
     ];
 
@@ -639,9 +635,9 @@
       renderSlotBadges();
       fetchEnvironmentAndRender();
 
-      // 튜토리얼을 아직 안 본 사용자라면 튜토리얼 자동 실행
+      // 튜토리얼 미완료 시 자동 시작
       if (!state.tutorialCompleted) {
-        setTimeout(() => startTutorial(false), 600);
+        setTimeout(() => startTutorial(false), 500);
       }
     });
 
@@ -649,11 +645,10 @@
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
-          const parsed = JSON.parse(raw);
-          state = { ...state, ...parsed };
+          state = { ...state, ...JSON.parse(raw) };
         }
       } catch (e) {
-        console.error("Local state load error", e);
+        console.error(e);
       }
     }
 
@@ -661,7 +656,7 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch (e) {
-        console.error("Local state save error", e);
+        console.error(e);
       }
     }
 
@@ -680,7 +675,6 @@
       fetchEnvironmentAndRender();
     }
 
-    // 상단 끼니 슬롯 뱃지 렌더링
     function renderSlotBadges() {
       const types = ["breakfast", "lunch", "dinner", "snack"];
       types.forEach(t => {
@@ -689,16 +683,15 @@
         const iconSpan = el.querySelector(".slot-icon");
         if (state.meals[t]) {
           const m = state.meals[t];
-          el.className = "slot-badge flex items-center gap-1 text-xs px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold cursor-pointer";
+          el.className = "px-2 py-1 rounded-lg bg-emerald-500/20 text-[11px] font-bold text-emerald-300 border border-emerald-500/40 cursor-pointer";
           iconSpan.textContent = m.guardian?.emoji || "✅";
         } else {
-          el.className = "slot-badge flex items-center gap-1 text-xs px-2.5 py-1 rounded-xl bg-slate-800 text-slate-400 font-semibold cursor-pointer";
+          el.className = "px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-400 border border-slate-700 cursor-pointer";
           iconSpan.textContent = "⚪";
         }
       });
     }
 
-    // 끼니 뱃지 클릭 시 요약 확인
     function viewMealDetail(type) {
       if (!state.meals[type]) {
         selectMealType(type);
@@ -706,10 +699,9 @@
         return;
       }
       const m = state.meals[type];
-      alert(`[${type.toUpperCase()}] 기록 완료!\n- 식단: ${m.foods_summary?.join(', ')}\n- 수호자: ${m.guardian?.name} (${m.guardian?.emoji})\n- 칼로리: ${m.nutrition?.calories} kcal, 단백질: ${m.nutrition?.protein}g`);
+      alert(`[${type.toUpperCase()} 기록 완료]\n• 음식: ${m.foods_summary?.join(', ')}\n• 수호 크리처: ${m.guardian?.name} (${m.guardian?.emoji})\n• 칼로리: ${m.nutrition?.calories} kcal, 단백질: ${m.nutrition?.protein}g`);
     }
 
-    // 환경 계산 및 2D 캔버스 렌더링
     async function fetchEnvironmentAndRender() {
       const mealCount = Object.keys(state.meals).length;
       try {
@@ -727,12 +719,11 @@
           applyEnvironmentToUI(env, mealCount);
         }
       } catch (e) {
-        console.error("Environment fetch error", e);
+        console.error(e);
       }
       renderCreatures();
     }
 
-    // 섬 비주얼 변화 반영
     function applyEnvironmentToUI(env, mealCount) {
       const viewport = document.getElementById("islandViewport");
       const sunDisc = document.getElementById("sunArea");
@@ -744,20 +735,20 @@
       const ground = document.getElementById("groundArea");
       const oceanFront = document.getElementById("oceanFront");
 
-      // 1. 하늘 & 태양
-      viewport.className = `flex-1 relative island-viewport sky-${env.sun_state}`;
+      // 1. 하늘
+      viewport.className = `island-viewport sky-${env.sun_state}`;
       if (env.sun_state === "heat") {
         sunEmoji.textContent = "☀️💦";
-        sunDisc.style.boxShadow = "0 0 60px #ff3838";
-      } else if (env.sun_state === "low" || env.sun_state === "dawn") {
+        sunDisc.style.boxShadow = "0 0 50px #ff3838";
+      } else if (env.sun_state === "low") {
         sunEmoji.textContent = "🌅";
-        sunDisc.style.boxShadow = "0 0 30px #f39c12";
+        sunDisc.style.boxShadow = "0 0 25px #f39c12";
       } else {
         sunEmoji.textContent = "☀️";
-        sunDisc.style.boxShadow = "0 0 45px #ffaf40";
+        sunDisc.style.boxShadow = "0 0 35px #ffaf40";
       }
 
-      // 2. 구름 / 날씨
+      // 2. 구름
       if (env.cloud_state === "storm") {
         cloudArea.className = "cloud-cluster cloud-storm";
         lightning.classList.remove("hidden");
@@ -772,18 +763,22 @@
         rainbowArc.classList.add("hidden");
       }
 
-      // 3. 바위산
+      // 3. 바위산 (보통 / 견고함 / 낮음)
       if (env.mountain_state === "solid") {
         mountain.className = "mountain-peak mountain-solid";
-      } else {
+      } else if (env.mountain_state === "weak") {
         mountain.className = "mountain-peak mountain-weak";
+      } else {
+        mountain.className = "mountain-peak mountain-normal";
       }
 
-      // 4. 대지/꽃밭
+      // 4. 대지/꽃밭 (보통 / 만개 / 시듦)
       if (env.meadow_state === "blooming") {
-        ground.className = "island-ground";
-      } else {
+        ground.className = "island-ground ground-blooming";
+      } else if (env.meadow_state === "wilted") {
         ground.className = "island-ground ground-wilted";
+      } else {
+        ground.className = "island-ground ground-normal";
       }
 
       // 5. 바다
@@ -794,19 +789,17 @@
       }
     }
 
-    // 섬 위에 수호 크리처들 배치 렌더링
     function renderCreatures() {
       const container = document.getElementById("creatureContainer");
       container.innerHTML = "";
 
       if (!state.guardians || state.guardians.length === 0) return;
 
-      // 크리처 위치 좌표 목록 (섬 위의 자연스러운 위치들)
       const positions = [
-        { bottom: "160px", left: "28%" },
-        { bottom: "180px", right: "26%" },
-        { bottom: "120px", left: "46%" },
-        { bottom: "150px", right: "42%" }
+        { bottom: "145px", left: "26%" },
+        { bottom: "165px", right: "24%" },
+        { bottom: "115px", left: "46%" },
+        { bottom: "140px", right: "40%" }
       ];
 
       state.guardians.forEach((g, idx) => {
@@ -818,10 +811,10 @@
         if (pos.right) el.style.right = pos.right;
 
         el.innerHTML = `
-          <div class="px-2.5 py-1 rounded-full bg-slate-900/90 text-[10px] font-black border border-amber-400 text-amber-300 shadow-lg whitespace-nowrap mb-1">
+          <div class="px-2 py-0.5 rounded-full bg-slate-900/90 text-[10px] font-black border border-amber-400 text-amber-300 shadow-md whitespace-nowrap mb-0.5">
             ${g.name}
           </div>
-          <div class="text-4xl md:text-5xl filter drop-shadow-md cursor-pointer transform hover:scale-110 transition" onclick="talkCreature('${g.name}', '${g.quote.replace(/'/g, "\\'")}')">
+          <div class="text-4xl filter drop-shadow-md cursor-pointer transform hover:scale-110 transition" onclick="talkCreature('${g.name}', '${g.quote.replace(/'/g, "\\'")}')">
             ${g.emoji}
           </div>
         `;
@@ -833,10 +826,10 @@
       alert(`[${name}의 메시지]\n"${quote}"`);
     }
 
-    // ================= 돋보기 진단 모달 열기 =================
+    // 돋보기 진단 모달
     function inspectEnvironment(zoneKey) {
       if (!state.currentEnv || !state.currentEnv.details) {
-        alert("아직 환경 데이터가 준비되지 않았습니다. 잠시만 기다려 주세요!");
+        alert("환경 데이터를 불러오는 중입니다. 잠시만 기다려 주세요!");
         return;
       }
       const data = state.currentEnv.details[zoneKey];
@@ -850,40 +843,29 @@
       const descEl = document.getElementById("inspectDescription");
       const recsEl = document.getElementById("inspectRecommendations");
 
-      const zoneEmojis = {
-        sun: "☀️",
-        cloud: "☁️",
-        mountain: "⛰️",
-        meadow: "🌺",
-        ocean: "🌊"
-      };
-
+      const zoneEmojis = { sun: "☀️", cloud: "☁️", mountain: "⛰️", meadow: "🌺", ocean: "🌊" };
       emojiEl.textContent = zoneEmojis[zoneKey] || "🔍";
       titleEl.textContent = data.title;
       statusBadge.textContent = data.status;
 
-      // 뱃지 색상
-      if (data.status === "견고함" || data.status === "정상" || data.status === "우수" || data.status === "만개함" || data.status === "최상" || data.status === "청정") {
-        statusBadge.className = "inspect-badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+      if (data.status === "견고함" || data.status === "정상" || data.status === "우수" || data.status === "만개함" || data.status === "최상" || data.status === "청정" || data.status === "보통") {
+        statusBadge.className = "px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
       } else {
-        statusBadge.className = "inspect-badge bg-amber-500/20 text-amber-400 border border-amber-500/30";
+        statusBadge.className = "px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
       }
 
       nutrientEl.textContent = data.nutrient;
       descEl.textContent = data.description;
 
-      // 추천 음식 리스트
       recsEl.innerHTML = "";
       (data.recommendations || []).forEach(r => {
         const item = document.createElement("div");
-        item.className = "p-2.5 rounded-xl bg-slate-800 border border-slate-750 flex items-start gap-2.5";
+        item.className = "p-2 rounded-xl bg-slate-800 border border-slate-750 flex items-start gap-2";
         item.innerHTML = `
-          <div class="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-            🍴
-          </div>
+          <div class="w-5 h-5 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">🍴</div>
           <div>
             <div class="text-xs font-bold text-white">${r.food_name}</div>
-            <div class="text-[11px] text-slate-400 mt-0.5">${r.tip}</div>
+            <div class="text-[11px] text-slate-300 mt-0.5 leading-tight">${r.tip}</div>
           </div>
         `;
         recsEl.appendChild(item);
@@ -896,7 +878,7 @@
       document.getElementById("inspectModal").classList.add("hidden");
     }
 
-    // ================= 식단 기록 모달 열기/닫기 =================
+    // 식단 등록 모달
     function openRecordModal() {
       document.getElementById("recordModal").classList.remove("hidden");
     }
@@ -907,13 +889,12 @@
 
     function selectMealType(t) {
       state.selectedMealType = t;
-      const types = ["breakfast", "lunch", "dinner", "snack"];
-      types.forEach(k => {
+      ["breakfast", "lunch", "dinner", "snack"].forEach(k => {
         const btn = document.getElementById(`mbtn-${k}`);
         if (k === t) {
-          btn.className = "meal-btn p-2 rounded-2xl bg-emerald-600/30 border-2 border-emerald-500 text-xs font-bold text-emerald-300 transition flex flex-col items-center gap-1";
+          btn.className = "meal-btn py-2 rounded-xl bg-emerald-600/30 border border-emerald-500 text-xs font-bold text-emerald-300 transition flex flex-col items-center gap-0.5";
         } else {
-          btn.className = "meal-btn p-2 rounded-2xl bg-slate-800 border-2 border-transparent text-xs font-bold text-slate-300 hover:bg-slate-750 transition flex flex-col items-center gap-1";
+          btn.className = "meal-btn py-2 rounded-xl bg-slate-800 border border-transparent text-xs font-bold text-slate-300 transition flex flex-col items-center gap-0.5";
         }
       });
     }
@@ -933,10 +914,9 @@
       reader.readAsDataURL(file);
     }
 
-    // 실제 파일 업로드 분석
     async function submitRealMeal() {
       if (!selectedFile) {
-        alert("음식 사진을 먼저 선택해 주세요! (또는 아래의 예시 식단 버튼을 누르면 즉시 테스트할 수 있습니다)");
+        alert("음식 사진을 먼저 선택해 주세요! (카메라로 촬영하거나 사진첩에서 선택)");
         return;
       }
 
@@ -961,53 +941,20 @@
         }
       } catch (e) {
         document.getElementById("analyzingLoader").classList.add("hidden");
-        alert("서버 통신 중 오류가 발생했습니다: " + e.message);
+        alert("서버 통신 오류: " + e.message);
       }
     }
 
-    // 체험용 예시 식단 제출
-    async function submitDemoMeal(sampleId) {
-      document.getElementById("analyzingLoader").classList.remove("hidden");
-      try {
-        const res = await fetch("/api/island/demo-meal", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sample_id: sampleId,
-            meal_type: state.selectedMealType
-          })
-        });
-        const data = await res.json();
-        document.getElementById("analyzingLoader").classList.add("hidden");
-
-        if (data.success) {
-          onMealAnalyzedSuccess(data);
-        }
-      } catch (e) {
-        document.getElementById("analyzingLoader").classList.add("hidden");
-        alert("체험 식단 로딩 중 오류가 발생했습니다.");
-      }
-    }
-
-    // 분석 성공 시 크리처 합류 모달 출력 및 상태 누적
     function onMealAnalyzedSuccess(data) {
       closeRecordModal();
-      state.lastAnalyzedData = data;
 
-      // 1. 해당 끼니 데이터 저장
       state.meals[data.meal_type] = data;
-
-      // 2. 수호 크리처 추가 (중복 방지)
       if (data.guardian) {
-        const existingIdx = state.guardians.findIndex(g => g.id === data.guardian.id);
-        if (existingIdx >= 0) {
-          state.guardians[existingIdx] = data.guardian;
-        } else {
-          state.guardians.push(data.guardian);
-        }
+        const idx = state.guardians.findIndex(g => g.id === data.guardian.id);
+        if (idx >= 0) state.guardians[idx] = data.guardian;
+        else state.guardians.push(data.guardian);
       }
 
-      // 3. 누적 영양소 가산
       const nut = data.nutrition;
       if (nut) {
         state.cumulativeNutrition.calories += (nut.calories || 0);
@@ -1031,7 +978,6 @@
 
       saveState();
 
-      // 크리처 합류 모달 채우기
       const g = data.guardian;
       document.getElementById("gModalEmoji").textContent = g.emoji || "🐾";
       document.getElementById("gModalName").textContent = g.name;
@@ -1040,11 +986,7 @@
       document.getElementById("gModalFoods").textContent = data.foods_summary?.join(", ") || "식단 기록";
       document.getElementById("gModalAdvice").textContent = `💡 ${data.next_meal_advice || ""}`;
 
-      // 팡파레 축포 효과!
-      if (window.confetti) {
-        confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
-      }
-
+      if (window.confetti) confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
       document.getElementById("guardianJoinModal").classList.remove("hidden");
     }
 
@@ -1054,7 +996,7 @@
       fetchEnvironmentAndRender();
     }
 
-    // ================= 튜토리얼 시스템 =================
+    // ================= 튜토리얼 시스템 (가상 식단 시뮬레이션 탑재) =================
     function startTutorial(manual = false) {
       tutStep = 0;
       updateTutorialStepUI();
@@ -1067,10 +1009,58 @@
       document.getElementById("tutMessage").innerHTML = step.msg;
       document.getElementById("tutStepIndicator").textContent = `${tutStep + 1} / ${TUTORIAL_STEPS.length} 단계`;
 
+      const demoBox = document.getElementById("tutDemoBox");
+      if (tutStep === 2) {
+        demoBox.classList.remove("hidden");
+      } else {
+        demoBox.classList.add("hidden");
+      }
+
       if (tutStep === TUTORIAL_STEPS.length - 1) {
         document.getElementById("btnTutNext").textContent = "시작하기! 🚀";
       } else {
         document.getElementById("btnTutNext").textContent = "다음 ➡️";
+      }
+    }
+
+    // 튜토리얼 전용 가상 시뮬레이션 (실제 플레이 상태에는 미반영)
+    function simulateTutorialMeal(type) {
+      const demoNotice = document.getElementById("tutDemoNotice");
+      demoNotice.classList.remove("hidden");
+
+      if (type === 'balanced') {
+        applyEnvironmentToUI({
+          sun_state: 'sunny',
+          cloud_state: 'rainbow',
+          mountain_state: 'solid',
+          meadow_state: 'blooming',
+          ocean_state: 'calm'
+        }, 1);
+
+        const container = document.getElementById("creatureContainer");
+        container.innerHTML = `
+          <div class="creature-card flex flex-col items-center pointer-events-auto" style="bottom: 145px; left: 32%;">
+            <div class="px-2 py-0.5 rounded-full bg-slate-900 text-[10px] font-black border border-amber-400 text-amber-300 mb-0.5">가디언 베어</div>
+            <div class="text-4xl animate-bounce">🐻</div>
+          </div>
+        `;
+        if (window.confetti) confetti({ particleCount: 50, spread: 50 });
+      } else {
+        applyEnvironmentToUI({
+          sun_state: 'sunny',
+          cloud_state: 'storm',
+          mountain_state: 'normal',
+          meadow_state: 'normal',
+          ocean_state: 'calm'
+        }, 1);
+
+        const container = document.getElementById("creatureContainer");
+        container.innerHTML = `
+          <div class="creature-card flex flex-col items-center pointer-events-auto" style="bottom: 145px; right: 30%;">
+            <div class="px-2 py-0.5 rounded-full bg-slate-900 text-[10px] font-black border border-amber-400 text-amber-300 mb-0.5">가디언 포키</div>
+            <div class="text-4xl animate-bounce">🦔</div>
+          </div>
+        `;
       }
     }
 
@@ -1080,7 +1070,11 @@
         state.tutorialCompleted = true;
         saveState();
         document.getElementById("tutorialOverlay").classList.add("hidden");
-        // 바로 첫 식단 등록을 도와주기 위해 모달 오픈
+
+        // 가상 체험 상태를 깨끗이 씻어내고, 실제 사용자의 정상 보통 섬으로 복원!
+        fetchEnvironmentAndRender();
+
+        // 사용자가 실제 첫 식단 사진을 올릴 수 있도록 모달 오픈
         setTimeout(() => openRecordModal(), 400);
       } else {
         updateTutorialStepUI();
@@ -1091,6 +1085,7 @@
       state.tutorialCompleted = true;
       saveState();
       document.getElementById("tutorialOverlay").classList.add("hidden");
+      fetchEnvironmentAndRender();
     }
   </script>
 

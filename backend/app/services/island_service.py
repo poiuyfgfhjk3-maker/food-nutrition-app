@@ -158,8 +158,8 @@ def calculate_island_environment(cumulative_nutrition: Dict[str, Any], meal_coun
 
     # 1. 하늘 & 태양 (에너지)
     if meal_count == 0:
-        sun_state = "dawn"
-        sun_desc = "아직 식단이 기록되지 않아 평화로운 아침 햇살이 비추고 있습니다."
+        sun_state = "sunny"
+        sun_desc = "아직 식단이 기록되기 전의 평화롭고 따스한 기본 햇살이 섬을 비추고 있습니다."
     elif carb_ratio < 0.6:
         sun_state = "low"
         sun_desc = "활동 에너지(탄수화물)가 조금 부족하여 해님의 빛이 은은해요. 든든한 통곡물이나 밥을 보충해 보세요."
@@ -171,7 +171,10 @@ def calculate_island_environment(cumulative_nutrition: Dict[str, Any], meal_coun
         sun_desc = "적정 에너지를 공급받아 황금빛 해님이 섬 전체를 따스하게 비추고 있습니다!"
 
     # 2. 하늘 날씨 & 구름 (당류)
-    if sugar_val > (YOUTH_RECOMMENDED["sugar"] * 0.8):
+    if meal_count == 0:
+        cloud_state = "clear"
+        cloud_desc = "하늘에 몽실몽실 하얀 뭉게구름이 평화롭게 떠다닙니다."
+    elif sugar_val > (YOUTH_RECOMMENDED["sugar"] * 0.8):
         cloud_state = "storm"
         cloud_desc = "단순 당류 섭취가 높아 보랏빛 번개구름이 발생했어요! 물을 충분히 마시고 과자 대신 신선한 과일을 선택해 보세요."
     elif sugar_val < 18.0 and meal_count >= 1:
@@ -183,7 +186,10 @@ def calculate_island_environment(cumulative_nutrition: Dict[str, Any], meal_coun
 
     # 3. 중앙 바위산 (단백질 & 칼슘)
     mountain_score = (protein_ratio + calcium_ratio) / 2
-    if mountain_score >= 0.7:
+    if meal_count == 0:
+        mountain_state = "normal"
+        mountain_desc = "기본 형태의 든든한 바위산입니다. 고기, 생선, 달걀, 우유를 골고루 먹으면 더욱 높고 웅장해지며 황금 수정이 빛납니다!"
+    elif mountain_score >= 0.7:
         mountain_state = "solid"
         mountain_desc = "단백질과 칼슘이 풍부하여 바위산이 높고 견고하게 솟았으며, 황금 수정이 단단하게 빛납니다!"
     else:
@@ -191,7 +197,10 @@ def calculate_island_environment(cumulative_nutrition: Dict[str, Any], meal_coun
         mountain_desc = "단백질과 칼슘이 다소 부족하여 바위산이 낮고 흙언덕 상태입니다. 달걀, 두부, 생선, 우유를 보충해 주면 단단해집니다."
 
     # 4. 대지 & 꽃밭 (비타민 & 식이섬유)
-    if vitamin_ratio >= 0.7:
+    if meal_count == 0:
+        meadow_state = "normal"
+        meadow_desc = "싱그러운 초록 잔디가 깔린 기본 들판입니다. 신선한 채소와 과일을 먹으면 알록달록 무지개 꽃밭이 만개합니다!"
+    elif vitamin_ratio >= 0.7:
         meadow_state = "blooming"
         meadow_desc = "비타민과 식이섬유가 듬뿍 공급되어 알록달록 꽃들이 활짝 피고 싱그러운 초록 숲이 우거졌습니다!"
     else:
@@ -199,12 +208,12 @@ def calculate_island_environment(cumulative_nutrition: Dict[str, Any], meal_coun
         meadow_desc = "채소와 비타민 섭취가 부족하여 꽃들이 아직 피어나지 못했어요. 신선한 나물이나 채소를 섭취해 보세요."
 
     # 5. 해변 바다 (나트륨)
-    if sodium_val > (YOUTH_RECOMMENDED["sodium"] * 0.75):
-        ocean_state = "flooded"
-        ocean_desc = "나트륨(염분) 섭취가 기준치보다 높아 바닷물이 차오르고 파도가 거세졌어요. 물을 마셔 수분을 조절해 주세요."
-    else:
+    if meal_count == 0 or sodium_val <= (YOUTH_RECOMMENDED["sodium"] * 0.75):
         ocean_state = "calm"
         ocean_desc = "염분 농도가 안정적입니다! 잔잔하고 투명한 에메랄드빛 바다가 모래사장을 부드럽게 감싸고 있어요."
+    else:
+        ocean_state = "flooded"
+        ocean_desc = "나트륨(염분) 섭취가 기준치보다 높아 바닷물이 차오르고 파도가 거세졌어요. 물을 마셔 수분을 조절해 주세요."
 
     return {
         "sun_state": sun_state,
