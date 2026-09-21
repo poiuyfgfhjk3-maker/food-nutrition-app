@@ -1,0 +1,23 @@
+# 가상환경
+venv/
+.venv/
+env/
+
+# 민감한 API 키 환경변수 (절대 유출 방지)
+.env
+backend/.env
+
+# 대용량 원본 식약처 엑셀 파일 (GitHub 100MB 단일 파일 용량 제한 방지)
+backend/data/raw/*.xlsx
+backend/data/raw/*.xls
+
+# 파이썬 캐시
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# 임시 테스트 스크립트
+test_vision.py
+fix_db.py
+diagnose_key.py
