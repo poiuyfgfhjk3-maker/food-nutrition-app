@@ -4,9 +4,17 @@ import re
 import json
 import base64
 import requests
-import numpy as np
-from PIL import Image
 from typing import Dict, Any, List, Optional, Tuple
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
 
 try:
     import onnxruntime as ort
@@ -196,7 +204,7 @@ def classify_food_with_local_vit(image_bytes: bytes) -> Optional[Tuple[str, floa
     (한국어_음식명, 확신도, 시각적_단서, 추정_그램수) 반환
     """
     session, id2label = get_vit_session()
-    if session is None or not id2label:
+    if session is None or not id2label or Image is None or np is None:
         return None
 
     try:
