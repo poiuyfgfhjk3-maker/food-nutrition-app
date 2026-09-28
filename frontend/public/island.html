@@ -423,8 +423,10 @@
       </div>
 
       <div class="flex items-center gap-1.5">
-        <button id="btnScreenshot" onclick="captureIslandScreenshot()" title="현재 섬 화면 스크린샷 저장" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 text-xs transition border border-slate-700 font-bold flex items-center gap-1">
-          <span>📸</span>
+        <button onclick="openAllergySettingsModal()" id="btnHeaderAllergy" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-rose-200 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95" title="식약처 19종 알레르기 관리">
+          <span class="text-sm">🛡️</span>
+          <span>알러지</span>
+          <span id="headerAllergyBadge" class="hidden px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-black leading-none"></span>
         </button>
         <button onclick="startTutorial(true)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1">
           <span>❓</span> 튜토리얼
@@ -615,6 +617,27 @@
           </label>
         </div>
 
+        <!-- 음식명 직접 입력 및 퀵 선택 -->
+        <div class="mb-4 space-y-2 text-left">
+          <div class="flex items-center justify-between text-xs">
+            <label class="font-bold text-slate-300 flex items-center gap-1">
+              <span>🍽️</span> <span>메뉴 이름 직접 지정 (선택)</span>
+            </label>
+            <span class="text-[10px] text-slate-500">34.5만 건 DB</span>
+          </div>
+          <input type="text" id="islandMealFoodHint" placeholder="예: 돈까스, 라면, 김치찌개, 소불고기, 피자..." 
+                 class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:border-emerald-500 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+          
+          <div class="flex flex-wrap gap-1 pt-1">
+            <button type="button" onclick="setIslandFoodHint('돈까스')" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10.5px] border border-slate-700 font-semibold">🥩 돈까스</button>
+            <button type="button" onclick="setIslandFoodHint('라면')" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10.5px] border border-slate-700 font-semibold">🍜 라면</button>
+            <button type="button" onclick="setIslandFoodHint('김치찌개')" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10.5px] border border-slate-700 font-semibold">🥘 김치찌개</button>
+            <button type="button" onclick="setIslandFoodHint('소불고기')" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10.5px] border border-slate-700 font-semibold">🍲 불고기</button>
+            <button type="button" onclick="setIslandFoodHint('피자')" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10.5px] border border-slate-700 font-semibold">🍕 피자</button>
+            <button type="button" onclick="setIslandFoodHint('샐러드')" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10.5px] border border-slate-700 font-semibold">🥗 샐러드</button>
+          </div>
+        </div>
+
         <!-- 등록 및 분석 버튼 -->
         <button id="btnSubmitMeal" onclick="submitRealMeal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-sm shadow-lg shadow-emerald-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
           <span>✨</span> AI 영양 분석 & 섬에 반영하기
@@ -645,10 +668,54 @@
           <div class="text-[11px] text-slate-400">
             다음 식사 조언: <span id="gModalAdvice" class="text-amber-300 font-bold">비타민C가 풍부한 신선한 과일을 곁들여보세요</span>
           </div>
+          <!-- 등록된 알레르기 유발물질 감지 시 긴급 경보 섹션 -->
+          <div id="gModalAllergyBox" class="hidden pt-2 border-t border-rose-500/50 bg-rose-950/40 -mx-4 -mb-2 p-3 rounded-b-2xl">
+            <div class="flex items-center gap-1.5 text-rose-400 font-black text-xs mb-1">
+              <span class="animate-pulse">🚨</span>
+              <span>알레르기 유발물질 감지 경보!</span>
+            </div>
+            <div id="gModalAllergyList" class="flex flex-wrap gap-1 text-[11px]"></div>
+          </div>
         </div>
 
         <button onclick="closeGuardianModalAndApply()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-sm shadow-lg transition">
           섬의 수호자로 맞이하기 🚀
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= 내 알레르기 관리 모달 (헤더 🛡️ 버튼 연동) ================= -->
+    <div id="allergyModal" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-5 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+        <button onclick="closeAllergySettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold p-1">✕</button>
+        
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-2xl">🛡️</span>
+          <div>
+            <h3 class="text-sm font-black text-white">식약처 19종 알레르기 관리</h3>
+            <p class="text-[10px] text-emerald-400 font-bold">식품등의 표시기준 법정 유발물질</p>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-300 mb-3 leading-tight">
+          주의해야 할 알레르기를 체크해 두시면 식단 분석 시 위험 확률을 예측하고 경고합니다.
+        </p>
+
+        <div class="flex items-center justify-between mb-2 px-1">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] font-bold text-slate-400">19종 다중 선택:</span>
+            <span id="modalSelectedCount" class="text-[11px] font-black text-amber-400">0개 선택됨</span>
+          </div>
+          <button type="button" onclick="clearModalAllergies()" class="text-[10.5px] text-rose-400 hover:text-rose-300 font-bold underline">
+            전체 해제 (알레르기 없음)
+          </button>
+        </div>
+
+        <div id="modalAllergyGrid" class="grid grid-cols-3 gap-1.5 max-h-56 overflow-y-auto p-1.5 bg-slate-950/70 rounded-2xl border border-slate-800 mb-4">
+          <!-- 19 allergen toggle buttons dynamically rendered -->
+        </div>
+
+        <button onclick="saveAllergyModalSettings()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs shadow-lg transition">
+          설정 저장 완료 ✨
         </button>
       </div>
     </div>
@@ -698,7 +765,26 @@
           </p>
         </div>
 
-        <!-- 튜토리얼 3단계 전용 인터랙티브 가상 체험 박스 (3버튼 가로 1열) -->
+        <!-- 튜토리얼 1단계 전용: 식약처 19종 알레르기 유발물질 다중 선택 등록 박스 -->
+        <div id="tutAllergyBox" class="hidden mb-2">
+          <div class="flex items-center justify-between mb-1 px-0.5">
+            <span class="text-[11px] font-bold text-amber-300 flex items-center gap-1">
+              <span>⚠️ 주의할 알레르기를 선택하세요:</span>
+            </span>
+            <button type="button" onclick="clearTutorialAllergies()" class="text-[10px] text-slate-400 hover:text-slate-200 underline font-bold">
+              알레르기 없음
+            </button>
+          </div>
+          <div id="tutAllergyGrid" class="grid grid-cols-3 gap-1 max-h-32 overflow-y-auto p-1 bg-slate-950/70 rounded-xl border border-slate-800">
+            <!-- 19종 알러지 버튼 동적 렌더링 -->
+          </div>
+          <div class="mt-1 flex items-center justify-between text-[10px] text-slate-400 px-1">
+            <span>선택: <b id="tutSelectedAllergyCount" class="text-emerald-400 font-bold">0개 선택됨</b></span>
+            <span class="text-slate-500">* 중복 선택 가능</span>
+          </div>
+        </div>
+
+        <!-- 튜토리얼 전용 인터랙티브 가상 체험 박스 (3버튼 가로 1열) -->
         <div id="tutDemoBox" class="hidden mb-1.5">
           <div class="grid grid-cols-3 gap-1.5 mb-1.5">
             <button onclick="simulateTutorialMeal('balanced')" class="py-1.5 px-1 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-white font-black text-[11px] transition text-center flex flex-col items-center">
@@ -747,37 +833,69 @@
         meadow_state: "blooming",
         ocean_state: "calm"
       },
-      tutorialCompleted: false
+      tutorialCompleted: false,
+      userAllergies: []
     };
+
+    const MFDS_ALLERGENS_LIST = [
+      { id: "egg", name: "알류(가금류)", short_name: "알류(달걀)", emoji: "🥚" },
+      { id: "milk", name: "우유", short_name: "우유", emoji: "🥛" },
+      { id: "buckwheat", name: "메밀", short_name: "메밀", emoji: "🌾" },
+      { id: "peanut", name: "땅콩", short_name: "땅콩", emoji: "🥜" },
+      { id: "soybean", name: "대두", short_name: "대두(콩)", emoji: "🫘" },
+      { id: "wheat", name: "밀", short_name: "밀(밀가루)", emoji: "🍞" },
+      { id: "mackerel", name: "고등어", short_name: "고등어", emoji: "🐟" },
+      { id: "crab", name: "게", short_name: "게", emoji: "🦀" },
+      { id: "shrimp", name: "새우", short_name: "새우", emoji: "🦐" },
+      { id: "pork", name: "돼지고기", short_name: "돼지고기", emoji: "🥓" },
+      { id: "peach", name: "복숭아", short_name: "복숭아", emoji: "🍑" },
+      { id: "tomato", name: "토마토", short_name: "토마토", emoji: "🍅" },
+      { id: "sulfite", name: "아황산류", short_name: "아황산류", emoji: "🧪" },
+      { id: "walnut", name: "호두", short_name: "호두", emoji: "🌰" },
+      { id: "chicken", name: "닭고기", short_name: "닭고기", emoji: "🍗" },
+      { id: "beef", name: "쇠고기", short_name: "쇠고기", emoji: "🥩" },
+      { id: "squid", name: "오징어", short_name: "오징어", emoji: "🦑" },
+      { id: "shellfish", name: "조개류", short_name: "조개류(굴/홍합)", emoji: "🦪" },
+      { id: "pine_nut", name: "잣", short_name: "잣", emoji: "🌲" }
+    ];
 
     let selectedMealType = "breakfast";
     let pendingImageBase64 = null;
     let tutStep = 0;
-
     let isTutorialCollapsed = false;
 
     const TUTORIAL_STEPS = [
       {
+        id: "allergy",
+        title: "주의해야 할 알레르기가 있나요? 🛡️",
+        msg: "안전한 마법 섬 탐험을 위해 식약처 19종 중 <b>주의할 알레르기를 모두 선택</b>해 주세요! (중복 선택 가능)"
+      },
+      {
+        id: "welcome",
         title: "Nutri-Island에 오신 것을 환영합니다! 🏝️",
         msg: "섭취한 식단의 <b>영양 밸런스</b>에 따라 기후가 변화하고 새로운 수호 동물이 찾아옵니다!"
       },
       {
+        id: "inspect",
         title: "섬의 4대 자연 요소를 터치해 보세요! 🔍",
         msg: "<b>태양, 하늘, 바위산, 바다</b>를 터치하여 식약처 기준 맞춤 권장 식단을 확인하세요!"
       },
       {
+        id: "demo",
         title: "가상 식단 시뮬레이션 체험! 🧪",
-        msg: "아래 버튼을 눌러 영양 상태에 따른 섬 환경의 실시간 변화를 관찰해 보세요!"
+        msg: "아래 버튼을 눌러 영양 상태에 따른 섬 환경의 실시간 변화와 <b>알레르기 위험 반응</b>을 관찰해 보세요!"
       },
       {
+        id: "start",
         title: "나만의 섬 관리 시작하기! 🚀",
-        msg: "체험 완료! 이제 <b>실제 식사 사진</b>을 등록하여 나만의 건강 섬을 가꿔보세요!"
+        msg: "체험 완료! 이제 <b>실제 식사 사진</b>을 등록하여 나만의 안전하고 건강한 섬을 가꿔보세요!"
       }
     ];
 
     window.addEventListener("DOMContentLoaded", () => {
       loadSavedState();
       renderSlotBadges();
+      updateHeaderAllergyBadge();
       fetchEnvironmentAndRender();
 
       // 튜토리얼 미완료 시 자동 시작
@@ -1178,9 +1296,17 @@
       }
     }
 
+    let pendingFileName = "";
+
     function handleImageSelected(e) {
       const file = e.target.files[0];
       if (!file) return;
+      pendingFileName = file.name || "";
+      
+      // 새 사진 업로드 시 기존 수동 입력 힌트 초기화하여 사진 우선 분석
+      const hintInput = document.getElementById("islandMealFoodHint");
+      if (hintInput) hintInput.value = "";
+
       const reader = new FileReader();
       reader.onload = (event) => {
         pendingImageBase64 = event.target.result;
@@ -1191,9 +1317,15 @@
       reader.readAsDataURL(file);
     }
 
+    function setIslandFoodHint(name) {
+      const input = document.getElementById("islandMealFoodHint");
+      if (input) input.value = name;
+    }
+
     async function submitRealMeal() {
-      if (!pendingImageBase64) {
-        showToast("식사 사진을 촬영하거나 앨범에서 선택해 주세요.", true);
+      const hint = document.getElementById("islandMealFoodHint")?.value?.trim() || "";
+      if (!pendingImageBase64 && !hint) {
+        showToast("식사 사진을 촬영하거나 먹은 메뉴 이름을 입력해 주세요.", true);
         return;
       }
 
@@ -1208,7 +1340,9 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             meal_type: selectedMealType,
-            image_base64: pendingImageBase64
+            image_base64: pendingImageBase64 || "",
+            food_hint: hint,
+            filename: pendingFileName
           })
         });
 
@@ -1220,7 +1354,7 @@
         const demoRes = await fetch("/api/island/demo-meal", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sample_id: "balanced", meal_type: selectedMealType })
+          body: JSON.stringify({ sample_id: "balanced_lunch", meal_type: selectedMealType })
         });
         const demoData = await demoRes.json();
         onMealAnalyzedSuccess(demoData);
@@ -1245,6 +1379,34 @@
 
       saveState();
       renderSlotBadges();
+
+      // 알레르기 유발물질 분석 및 사용자 등록 알러지 매칭 확인
+      const allergens = data.allergens || [];
+      const userAllergies = state.userAllergies || [];
+      const triggered = allergens.filter(a => userAllergies.includes(a.id));
+
+      const allergyBox = document.getElementById("gModalAllergyBox");
+      const allergyList = document.getElementById("gModalAllergyList");
+      if (allergyBox && allergyList) {
+        if (triggered.length > 0) {
+          allergyBox.classList.remove("hidden");
+          allergyList.innerHTML = triggered.map(t => `
+            <span class="px-2 py-0.5 rounded-lg bg-rose-600/30 text-rose-300 border border-rose-500 font-bold">
+              ${t.emoji || '⚠️'} ${t.short_name || t.name} (${t.max_percentage || 95}%)
+            </span>
+          `).join("");
+          showToast(`🚨 주의! 등록하신 알러지 유발물질 [${triggered.map(t => t.short_name || t.name).join(', ')}] 감지!`, true);
+        } else if (allergens.length > 0) {
+          allergyBox.classList.remove("hidden");
+          allergyList.innerHTML = allergens.slice(0, 3).map(t => `
+            <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px]">
+              ${t.emoji || ''} ${t.short_name || t.name} (${t.max_percentage || 80}%)
+            </span>
+          `).join("");
+        } else {
+          allergyBox.classList.add("hidden");
+        }
+      }
 
       // 수호 크리처 축하 모달 오픈
       const g = data.guardian;
@@ -1278,6 +1440,131 @@
       fetchEnvironmentAndRender();
     }
 
+    // ================= 식약처 19종 알레르기 관리 로직 =================
+    function updateHeaderAllergyBadge() {
+      const badge = document.getElementById("headerAllergyBadge");
+      const btn = document.getElementById("btnHeaderAllergy");
+      if (!badge) return;
+      const count = (state.userAllergies || []).length;
+      if (count > 0) {
+        badge.textContent = `${count}`;
+        badge.classList.remove("hidden");
+        if (btn) {
+          btn.classList.add("text-rose-300", "border-rose-500/50");
+          btn.classList.remove("text-amber-300", "border-slate-700");
+        }
+      } else {
+        badge.classList.add("hidden");
+        if (btn) {
+          btn.classList.remove("text-rose-300", "border-rose-500/50");
+          btn.classList.add("text-amber-300", "border-slate-700");
+        }
+      }
+    }
+
+    function renderTutorialAllergyGrid() {
+      const grid = document.getElementById("tutAllergyGrid");
+      if (!grid) return;
+      grid.innerHTML = MFDS_ALLERGENS_LIST.map(a => {
+        const isSelected = (state.userAllergies || []).includes(a.id);
+        const activeClass = isSelected
+          ? "bg-amber-500/25 text-amber-300 border-amber-400 font-black shadow-sm"
+          : "bg-slate-900/80 text-slate-400 border-slate-700 hover:text-slate-200";
+        return `
+          <button type="button" onclick="toggleTutorialAllergy('${a.id}')" 
+                  class="py-1 px-1.5 rounded-lg border text-[10.5px] transition flex items-center justify-between gap-1 text-left ${activeClass}">
+            <span class="truncate">${a.emoji} ${a.short_name}</span>
+            <span class="text-[10px]">${isSelected ? '✓' : ''}</span>
+          </button>
+        `;
+      }).join("");
+
+      const countEl = document.getElementById("tutSelectedAllergyCount");
+      if (countEl) {
+        const cnt = (state.userAllergies || []).length;
+        countEl.textContent = cnt > 0 ? `${cnt}개 선택됨` : "0개 선택됨";
+      }
+    }
+
+    function toggleTutorialAllergy(id) {
+      if (!state.userAllergies) state.userAllergies = [];
+      const idx = state.userAllergies.indexOf(id);
+      if (idx >= 0) {
+        state.userAllergies.splice(idx, 1);
+      } else {
+        state.userAllergies.push(id);
+      }
+      saveState();
+      renderTutorialAllergyGrid();
+      updateHeaderAllergyBadge();
+    }
+
+    function clearTutorialAllergies() {
+      state.userAllergies = [];
+      saveState();
+      renderTutorialAllergyGrid();
+      updateHeaderAllergyBadge();
+      showToast("알레르기 없음으로 설정되었습니다.");
+    }
+
+    function openAllergySettingsModal() {
+      renderModalAllergyGrid();
+      document.getElementById("allergyModal").classList.remove("hidden");
+    }
+
+    function closeAllergySettingsModal() {
+      document.getElementById("allergyModal").classList.add("hidden");
+    }
+
+    function renderModalAllergyGrid() {
+      const grid = document.getElementById("modalAllergyGrid");
+      if (!grid) return;
+      grid.innerHTML = MFDS_ALLERGENS_LIST.map(a => {
+        const isSelected = (state.userAllergies || []).includes(a.id);
+        const activeClass = isSelected
+          ? "bg-rose-500/25 text-rose-300 border-rose-400 font-black shadow-md ring-1 ring-rose-400/40"
+          : "bg-slate-900/80 text-slate-400 border-slate-700 hover:text-slate-200 hover:border-slate-600";
+        return `
+          <button type="button" onclick="toggleModalAllergy('${a.id}')" 
+                  class="p-2 rounded-xl border text-xs transition flex items-center justify-between gap-1.5 text-left active:scale-95 ${activeClass}">
+            <span class="truncate">${a.emoji} ${a.short_name}</span>
+            <span class="text-xs font-black">${isSelected ? '✓' : ''}</span>
+          </button>
+        `;
+      }).join("");
+
+      const countEl = document.getElementById("modalSelectedCount");
+      if (countEl) {
+        const count = (state.userAllergies || []).length;
+        countEl.textContent = count > 0 ? `${count}개 선택됨` : "0개 (없음)";
+      }
+    }
+
+    function toggleModalAllergy(id) {
+      if (!state.userAllergies) state.userAllergies = [];
+      const idx = state.userAllergies.indexOf(id);
+      if (idx >= 0) {
+        state.userAllergies.splice(idx, 1);
+      } else {
+        state.userAllergies.push(id);
+      }
+      renderModalAllergyGrid();
+    }
+
+    function clearModalAllergies() {
+      state.userAllergies = [];
+      renderModalAllergyGrid();
+      showToast("모든 알레르기가 해제되었습니다.");
+    }
+
+    function saveAllergyModalSettings() {
+      saveState();
+      updateHeaderAllergyBadge();
+      closeAllergySettingsModal();
+      const count = (state.userAllergies || []).length;
+      showToast(count > 0 ? `알레르기 ${count}종이 설정되었습니다! 🛡️` : "알레르기가 '없음'으로 설정되었습니다. 🛡️");
+    }
+
     // ================= 온보딩 튜토리얼 컨트롤러 =================
     function toggleTutorialCollapse() {
       isTutorialCollapsed = !isTutorialCollapsed;
@@ -1297,7 +1584,8 @@
     function updateMiniPillContent() {
       const miniContent = document.getElementById("tutMiniContent");
       if (!miniContent) return;
-      if (tutStep === 2) {
+      const curStep = TUTORIAL_STEPS[tutStep];
+      if (curStep && curStep.id === 'demo') {
         miniContent.innerHTML = `
           <div class="flex items-center gap-1">
             <button onclick="simulateTutorialMeal('balanced'); event.stopPropagation();" class="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[10.5px] font-black text-white active:scale-95 transition">🥗 맑음</button>
@@ -1306,7 +1594,7 @@
           </div>
         `;
       } else {
-        miniContent.innerHTML = `<span>🏝️</span><span>섬 감상 중 (${tutStep + 1}/4)</span>`;
+        miniContent.innerHTML = `<span>🏝️</span><span>섬 감상 중 (${tutStep + 1}/${TUTORIAL_STEPS.length})</span>`;
       }
     }
 
@@ -1327,11 +1615,21 @@
       document.getElementById("tutMessage").innerHTML = step.msg;
       document.getElementById("tutStepIndicator").textContent = `${tutStep + 1} / ${TUTORIAL_STEPS.length} 단계`;
 
+      const allergyBox = document.getElementById("tutAllergyBox");
       const demoBox = document.getElementById("tutDemoBox");
-      if (tutStep === 2) {
-        demoBox.classList.remove("hidden");
+
+      if (step.id === 'allergy') {
+        if (allergyBox) {
+          allergyBox.classList.remove("hidden");
+          renderTutorialAllergyGrid();
+        }
+        if (demoBox) demoBox.classList.add("hidden");
+      } else if (step.id === 'demo') {
+        if (allergyBox) allergyBox.classList.add("hidden");
+        if (demoBox) demoBox.classList.remove("hidden");
       } else {
-        demoBox.classList.add("hidden");
+        if (allergyBox) allergyBox.classList.add("hidden");
+        if (demoBox) demoBox.classList.add("hidden");
       }
 
       if (tutStep === TUTORIAL_STEPS.length - 1) {
@@ -1349,6 +1647,41 @@
       const fb = document.getElementById("tutDemoFeedback");
       const bearEntity = document.getElementById("guardianBearEntity");
       if (fb) fb.classList.remove("hidden");
+
+      // 사용자 등록 알레르기 항목과의 대조
+      const userAllergies = state.userAllergies || [];
+      let demoAllergens = [];
+      if (type === 'balanced') {
+        demoAllergens = [
+          { id: 'egg', name: '알류(달걀말이)', pct: 100 },
+          { id: 'beef', name: '쇠고기(불고기)', pct: 100 },
+          { id: 'soybean', name: '대두(간장양념)', pct: 95 },
+          { id: 'wheat', name: '밀(양조간장)', pct: 75 }
+        ];
+      } else if (type === 'sweet') {
+        demoAllergens = [
+          { id: 'wheat', name: '밀(도넛반죽)', pct: 99 },
+          { id: 'milk', name: '우유(버터/크림)', pct: 85 },
+          { id: 'egg', name: '알류(반죽)', pct: 80 }
+        ];
+      } else if (type === 'sodium') {
+        demoAllergens = [
+          { id: 'wheat', name: '밀(유탕면)', pct: 99 },
+          { id: 'soybean', name: '대두(스프간장)', pct: 85 },
+          { id: 'beef', name: '쇠고기(육수스프)', pct: 70 }
+        ];
+      }
+
+      const matchedAllergens = demoAllergens.filter(a => userAllergies.includes(a.id));
+      let allergyWarningHtml = "";
+      if (matchedAllergens.length > 0) {
+        allergyWarningHtml = `
+          <div class="mt-1 pt-1 border-t border-rose-500/40 text-rose-300 font-black text-[10px] flex items-center justify-center gap-1 animate-pulse">
+            <span>🚨 알레르기 경보:</span>
+            <span>등록하신 [${matchedAllergens.map(m => `${m.name} ${m.pct}%`).join(', ')}] 포함!</span>
+          </div>
+        `;
+      }
 
       if (type === 'balanced') {
         const balancedEnv = {
@@ -1386,7 +1719,7 @@
           `;
         }
         if (fb) {
-          fb.innerHTML = "✨ <b>잡곡밥&불고기</b>: 가디언 베어가 방문하며 바위산 수호석이 황금빛으로 빛납니다!";
+          fb.innerHTML = `<div>✨ <b>잡곡밥&불고기</b>: 가디언 베어가 방문하며 바위산 수호석이 황금빛으로 빛납니다!</div>${allergyWarningHtml}`;
           fb.className = "p-1.5 rounded-lg text-center text-[10.5px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
         }
       } else if (type === 'sweet') {
@@ -1419,7 +1752,7 @@
           `;
         }
         if (fb) {
-          fb.innerHTML = "⚡ <b>초코도넛&탄산</b>: 단순 당류 과다로 먹구름과 과열 현상이 발생합니다!";
+          fb.innerHTML = `<div>⚡ <b>초코도넛&탄산</b>: 단순 당류 과다로 먹구름과 과열 현상이 발생합니다!</div>${allergyWarningHtml}`;
           fb.className = "p-1.5 rounded-lg text-center text-[10.5px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30";
         }
       } else if (type === 'sodium') {
@@ -1452,7 +1785,7 @@
           `;
         }
         if (fb) {
-          fb.innerHTML = "🌊 <b>컵라면</b>: 나트륨 과다로 해수면이 상승하여 해안선이 침수 위험에 처합니다!";
+          fb.innerHTML = `<div>🌊 <b>컵라면</b>: 나트륨 과다로 해수면이 상승하여 해안선이 침수 위험에 처합니다!</div>${allergyWarningHtml}`;
           fb.className = "p-1.5 rounded-lg text-center text-[10.5px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30";
         }
       }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>식약처 DB 기반 AI 푸드 영양 스캐너 (비타민 & 무기질 지원)</title>
+  <title>식약처 AI 영양 및 알러지 스캐너 (식약처 DB 4종 & 19대 알레르기 정밀 추론)</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome CDN -->
@@ -52,15 +52,19 @@
           <i class="fa-solid fa-camera-retro text-lg"></i>
         </div>
         <div>
-          <h1 class="text-base font-bold text-slate-900 leading-tight">식약처 AI 영양 스캐너</h1>
+          <h1 class="text-base font-bold text-slate-900 leading-tight">식약처 AI 영양 및 알러지 스캐너</h1>
           <p class="text-xs text-slate-500 flex items-center gap-1">
             <span class="inline-block w-1.5 h-1.5 rounded-full bg-brand-500"></span>
-            탄·단·지 + 주요 비타민 & 무기질 통합
+            식약처 4대 DB & 19종 법정 알레르기 정밀 추론
           </p>
         </div>
       </div>
 
       <div class="flex items-center space-x-2">
+        <button onclick="openModal('allergyModal')" class="px-2.5 py-1.5 text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg text-xs font-bold flex items-center gap-1.5 transition border border-rose-200 shadow-sm" title="식약처 19종 내 알레르기 설정">
+          <i class="fa-solid fa-shield-halved text-rose-500"></i>
+          <span id="scannerAllergyBtnText">알러지</span>
+        </button>
         <a href="/island" class="px-2.5 py-1.5 text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg text-xs font-bold flex items-center gap-1 transition shadow-sm" title="Nutri-Island 게임으로 이동">
           <span>🏝️</span>
           <span>마법의 섬</span>
@@ -90,6 +94,45 @@
       <span class="text-brand-600 font-semibold flex items-center gap-1">
         출처 목록 보기 <i class="fa-solid fa-chevron-right text-[10px]"></i>
       </span>
+    </div>
+
+    <!-- 식약처 19종 내 알레르기 상시 선택 패널 (중복 선택 지원) -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-sm font-bold shadow-inner">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h2 class="text-sm font-bold text-slate-900">식약처 19종 내 알레르기 설정</h2>
+              <span id="mainAllergyCountBadge" class="bg-slate-100 text-slate-600 text-[10.5px] px-2 py-0.5 rounded-full font-bold">선택 안 됨</span>
+            </div>
+            <p class="text-[11px] text-slate-500">주의 성분을 중복 선택하시면 음식 스캔 시 위험을 즉시 감지하여 경고합니다</p>
+          </div>
+        </div>
+        <button type="button" onclick="toggleMainAllergyCollapse()" class="text-xs text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" title="접기/펼치기">
+          <i id="mainAllergyCollapseIcon" class="fa-solid fa-chevron-up"></i>
+        </button>
+      </div>
+
+      <div id="mainAllergyContent" class="space-y-2.5">
+        <!-- 빠른 선택 프리셋 버튼 -->
+        <div class="flex items-center justify-between flex-wrap gap-1 text-[11px]">
+          <span class="text-slate-400 font-semibold">빠른 선택:</span>
+          <div class="flex flex-wrap gap-1">
+            <button type="button" onclick="presetAllergies(['egg', 'milk', 'wheat', 'soybean'])" class="px-2 py-0.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-md font-semibold text-slate-600 transition border border-slate-200">👶 영유아 4종</button>
+            <button type="button" onclick="presetAllergies(['shrimp', 'crab', 'mackerel', 'squid', 'shellfish'])" class="px-2 py-0.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-md font-semibold text-slate-600 transition border border-slate-200">🦐 해산물 5종</button>
+            <button type="button" onclick="presetAllergies(['peanut', 'walnut', 'pine_nut'])" class="px-2 py-0.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-md font-semibold text-slate-600 transition border border-slate-200">🥜 견과류 3종</button>
+            <button type="button" onclick="clearScannerAllergies()" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded-md font-semibold text-rose-600 transition border border-slate-200">전체 해제</button>
+          </div>
+        </div>
+
+        <!-- 19종 체크 토글 그리드 -->
+        <div id="mainAllergyGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-1.5 pt-1 text-xs">
+          <!-- 19 allergen items dynamically rendered -->
+        </div>
+      </div>
     </div>
 
     <!-- 카메라 촬영 / 이미지 업로드 카드 -->
@@ -125,13 +168,52 @@
         <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelected(event)" />
       </div>
 
+      <!-- 스마트 메뉴 검색 & 34.5만 건 식약처 DB 직접 선택 바 -->
+      <div class="mt-4 pt-3 border-t border-slate-200/70 text-left space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+            <span class="text-brand-600">🔍</span>
+            <span>어떤 음식인가요? (직접 검색 또는 빠른 선택)</span>
+          </label>
+          <span class="text-[10px] text-slate-400">식약처 34.5만 건 DB 실시간 매칭</span>
+        </div>
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-utensils absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="manualFoodInput" placeholder="예: 돈까스, 라면, 김치찌개, 삼겹살, 피자, 사과, 마라탕..." 
+                   onkeydown="if(event.key==='Enter') searchAndApplyManualFood()"
+                   class="w-full pl-8 pr-3 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 focus:border-brand-500 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500 transition" />
+          </div>
+          <button type="button" onclick="searchAndApplyManualFood()" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-brand-500/20 whitespace-nowrap transition flex items-center gap-1">
+            <i class="fa-solid fa-magnifying-glass"></i> 영양 분석
+          </button>
+        </div>
+
+        <!-- 인기 대표 음식 원클릭 퀵 칩 -->
+        <div class="flex items-center gap-1.5 flex-wrap pt-0.5">
+          <span class="text-[10.5px] font-bold text-slate-400 shrink-0">추천:</span>
+          <div class="flex flex-wrap gap-1">
+            <button type="button" onclick="quickSelectFood('김치찌개')" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 text-slate-600 rounded-lg text-[11px] font-semibold transition border border-slate-200">🥘 김치찌개</button>
+            <button type="button" onclick="quickSelectFood('돈까스')" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 text-slate-600 rounded-lg text-[11px] font-semibold transition border border-slate-200">🥩 돈까스</button>
+            <button type="button" onclick="quickSelectFood('라면')" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 text-slate-600 rounded-lg text-[11px] font-semibold transition border border-slate-200">🍜 라면</button>
+            <button type="button" onclick="quickSelectFood('삼겹살구이')" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 text-slate-600 rounded-lg text-[11px] font-semibold transition border border-slate-200">🥓 삼겹살</button>
+            <button type="button" onclick="quickSelectFood('소불고기')" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 text-slate-600 rounded-lg text-[11px] font-semibold transition border border-slate-200">🍲 소불고기</button>
+            <button type="button" onclick="quickSelectFood('치킨')" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 text-slate-600 rounded-lg text-[11px] font-semibold transition border border-slate-200">🍗 치킨</button>
+            <button type="button" onclick="quickSelectFood('피자')" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 text-slate-600 rounded-lg text-[11px] font-semibold transition border border-slate-200">🍕 피자</button>
+            <button type="button" onclick="quickSelectFood('샐러드')" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 text-slate-600 rounded-lg text-[11px] font-semibold transition border border-slate-200">🥗 샐러드</button>
+            <button type="button" onclick="quickSelectFood('초밥')" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 text-slate-600 rounded-lg text-[11px] font-semibold transition border border-slate-200">🍣 초밥</button>
+            <button type="button" onclick="quickSelectFood('자장면')" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 text-slate-600 rounded-lg text-[11px] font-semibold transition border border-slate-200">🥢 자장면</button>
+          </div>
+        </div>
+      </div>
+
       <div id="analysisLoading" class="hidden mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-left space-y-2">
         <div class="flex items-center justify-between text-xs font-bold text-emerald-800">
           <span class="flex items-center gap-2">
             <i class="fa-solid fa-circle-notch fa-spin text-emerald-600"></i>
-            <span id="loadingStepText">AI가 음식 부피 분석 및 비타민·무기질 DB 매핑 중...</span>
+            <span id="loadingStepText">식약처 34.5만 건 DB 매핑 및 19대 알레르기 분석 중...</span>
           </span>
-          <span class="text-emerald-600">Gemini Vision AI</span>
+          <span class="text-emerald-600">식약처 AI 스캐너</span>
         </div>
         <div class="w-full bg-emerald-200 h-1.5 rounded-full overflow-hidden">
           <div class="bg-emerald-600 h-full rounded-full animate-pulse" style="width: 80%"></div>
@@ -141,6 +223,30 @@
 
     <!-- 분석 결과 섹션 -->
     <div id="resultSection" class="hidden space-y-4">
+
+      <!-- [긴급] 사용자 등록 알레르기 유발물질 위험 경보 배너 -->
+      <div id="allergyAlertBanner" class="hidden bg-rose-50 border-2 border-rose-500 rounded-2xl p-4 text-rose-900 flex items-start gap-3 shadow-md animate-pulse">
+        <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-xl shrink-0 shadow">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <h4 class="font-black text-rose-950 text-sm flex items-center gap-1.5">
+              <span>🚨 알레르기 유발물질 위험 경보!</span>
+            </h4>
+            <span class="text-[10.5px] bg-rose-200 text-rose-800 px-2 py-0.5 rounded-full font-bold">섭취 주의</span>
+          </div>
+          <p id="allergyAlertMessage" class="text-xs text-rose-800 mt-1 font-semibold leading-relaxed">
+            회원님이 등록하신 알레르기 성분이 감지되었습니다.
+          </p>
+          <div class="mt-2.5 flex items-center gap-2">
+            <button type="button" onclick="openFirstTriggeredAllergyProof()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-virus"></i> 긴급 알러지 추론 근거 보기
+            </button>
+            <span class="text-[11px] text-rose-700 font-medium">클릭 시 검출 원재료 및 식약처 기준 확인</span>
+          </div>
+        </div>
+      </div>
 
       <!-- API 키 에러/안내 배너 -->
       <div id="apiErrorBanner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-200 flex items-start gap-2.5">
@@ -158,19 +264,22 @@
       <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-5 text-white shadow-xl shadow-slate-900/10">
         <div class="flex items-start justify-between border-b border-slate-700/60 pb-3">
           <div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">
                 <i class="fa-solid fa-sparkles text-xs"></i> AI 분석 완료
               </span>
-              <button onclick="openProofModalFor(0)" class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 transition">
-                <i class="fa-solid fa-calculator text-[10px]"></i> 계산 근거 & 식약처 원본 검증
+              <button onclick="openProofModalFor(0)" class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/25 text-emerald-200 hover:bg-emerald-500/40 border border-emerald-400/50 transition shadow-sm">
+                <i class="fa-solid fa-calculator text-xs"></i> 🔍 영양·비타민·무기질 추론 근거 보기
+              </button>
+              <button onclick="openSearchModalFor(0)" class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 border border-sky-500/40 transition">
+                <i class="fa-solid fa-arrows-rotate text-[10px]"></i> 34.5만 DB 음식 변경
               </button>
             </div>
             <h3 id="dietSummaryText" class="text-base font-bold text-slate-100 mt-2">식단 요약</h3>
           </div>
           <div id="mockBadge" class="hidden text-right">
-            <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">
-              체험(Mock) 모드
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-semibold">
+              식약처 스마트 DB 분석
             </span>
           </div>
         </div>
@@ -355,6 +464,43 @@
         </div>
       </div>
 
+      <!-- 식약처 19종 알레르기 유발물질 정밀 예측 리포트 카드 -->
+      <div id="allergyReportCard" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3.5">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-base font-bold shadow-inner">
+              <i class="fa-solid fa-shield-virus"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h3 class="font-bold text-slate-900 text-sm">식약처 19대 알레르기 유발물질 AI 분석</h3>
+                <span id="detectedAllergenCountBadge" class="bg-amber-100 text-amber-800 font-black text-[10px] px-2 py-0.5 rounded-full">0종 검출</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">「식품등의 표시기준」 법정 유발물질 포함 확률(%) 및 위험도 평가</p>
+            </div>
+          </div>
+          <button onclick="openModal('allergyModal')" class="text-xs text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-xl font-bold border border-rose-200 transition flex items-center gap-1">
+            <i class="fa-solid fa-gear text-[10px]"></i> 내 알러지 설정
+          </button>
+        </div>
+
+        <div id="detectedAllergensContainer" class="space-y-2">
+          <!-- 검출된 알레르기 유발물질 목록 및 진행률 바 동적 렌더링 -->
+        </div>
+
+        <!-- 19종 중 미검출 안심 목록 접기/펼치기 -->
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span id="safeAllergenSummaryText" class="font-medium text-slate-600">19종 중 미검출 성분</span>
+          <button type="button" onclick="toggleSafeAllergens()" class="text-brand-600 font-semibold hover:underline flex items-center gap-1 text-[11px]">
+            <span id="safeAllergenToggleText">전체 19종 대조표 확인</span>
+            <i id="safeAllergenToggleIcon" class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+        </div>
+        <div id="safeAllergensList" class="hidden flex flex-wrap gap-1.5 pt-2 text-[11px]">
+          <!-- 미검출 항목 칩 -->
+        </div>
+      </div>
+
       <!-- 감지된 개별 음식 리스트 -->
       <div class="flex items-center justify-between px-1">
         <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
@@ -491,44 +637,145 @@
     </div>
   </div>
 
-  <!-- 식약처 엑셀(.xlsx) 파일 및 적재 현황 모달 -->
-  <div id="excelModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl">
+  <!-- [신설] 식약처 19종 알레르기 위험도 추론 근거 검증서 모달 -->
+  <div id="allergyProofModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b pb-3">
-        <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
-          <i class="fa-solid fa-file-excel text-emerald-600"></i>
-          식약처 영양성분 DB 적재 현황 (비타민/무기질 포함)
-        </h3>
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg font-black shadow-inner">
+            <i class="fa-solid fa-shield-virus"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-base leading-tight">알레르기 위험도 추론 근거 검증서</h3>
+            <p class="text-[11px] text-amber-700 font-semibold">식약처 19종 법정 분류 및 조리법 원재료 구성 기반</p>
+          </div>
+        </div>
+        <button onclick="closeModal('allergyProofModal')" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- 알레르기 물질 기본 카드 -->
+      <div id="allergyProofHeaderCard" class="p-3.5 rounded-2xl border space-y-2 text-xs">
+        <!-- 동적 렌더링 -->
+      </div>
+
+      <!-- 1. 검출된 원재료 및 조리법 분석 -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
+        <div class="font-bold text-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-utensils text-brand-600"></i>
+          <span>음식 내 식재료 및 조리법 추론 근거:</span>
+        </div>
+        <div id="allergyProofReasonsList" class="space-y-1.5 pl-2 text-slate-700 leading-relaxed text-[11.5px]">
+          <!-- 동적 항목 -->
+        </div>
+      </div>
+
+      <!-- 2. 식약처 법적 기준 및 의무 표시 정의 -->
+      <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-3 text-xs space-y-1">
+        <div class="font-bold text-blue-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-scale-balanced text-blue-600"></i>
+          <span>식약처 「식품등의 표시기준」 법적 분류 근거:</span>
+        </div>
+        <p id="allergyProofLegalBasis" class="text-blue-800 text-[11px] leading-relaxed pl-2"></p>
+      </div>
+
+      <!-- 3. 교차 반응 및 임상 주의사항 -->
+      <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-3 text-xs space-y-1">
+        <div class="font-bold text-amber-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+          <span>교차 반응 및 임상/영양학적 주의점:</span>
+        </div>
+        <p id="allergyProofCrossReactivity" class="text-amber-800 text-[11px] leading-relaxed pl-2"></p>
+        <p id="allergyProofClinicalNotes" class="text-amber-800 text-[11px] leading-relaxed pl-2 border-t border-amber-200/60 pt-1 mt-1 font-medium"></p>
+      </div>
+
+      <!-- 4. 섭취 가이드 & 대체 식재료 조언 -->
+      <div class="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3 text-xs space-y-1">
+        <div class="font-bold text-emerald-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-check text-emerald-600"></i>
+          <span>섭취 행동 가이드 & 조리 시 요청 권장:</span>
+        </div>
+        <p id="allergyProofActionGuide" class="text-emerald-800 text-[11px] leading-relaxed pl-2"></p>
+      </div>
+
+      <div class="flex justify-end pt-1">
+        <button type="button" onclick="closeModal('allergyProofModal')" class="px-5 py-2 text-xs font-bold bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition">확인 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 식약처 4대 CSV/XLSX DB 파일 관리 모달 -->
+  <div id="excelModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-black">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-base leading-tight">식약처 4대 영양 DB 파일 관리</h3>
+            <p class="text-[11px] text-emerald-700 font-semibold">식품안전나라 4가지 CSV/XLSX 파일 기반 정밀 추론</p>
+          </div>
+        </div>
         <button onclick="closeModal('excelModal')" class="text-slate-400 hover:text-slate-600 p-1">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <div class="space-y-2">
-        <p class="text-xs font-bold text-slate-700">현재 DB 적재 완료 내역:</p>
-        <div id="sourceStatsContainer" class="space-y-1.5 max-h-48 overflow-y-auto text-xs"></div>
+      <!-- 식약처 공식 다운로드 안내 링크 -->
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between text-xs">
+        <div>
+          <span class="font-bold text-slate-800">식품의약품안전처 통합식품영양성분DB</span>
+          <p class="text-[11px] text-slate-500 mt-0.5">다운로드한 4가지 CSV 파일을 올리면 결과가 이에 바탕합니다</p>
+        </div>
+        <a href="https://various.foodsafetykorea.go.kr/nutrient/general/down/historyList.do" target="_blank" 
+           class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-sm flex items-center gap-1 transition">
+          <span>식약처 다운로드</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+        </a>
       </div>
 
+      <!-- 4대 DB 슬롯 현황 카드 그리드 -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-700 flex items-center gap-1">
+          <i class="fa-solid fa-layer-group text-emerald-600"></i>
+          <span>식약처 4대 DB 슬롯 적재 현황:</span>
+        </h4>
+        <div id="slotsStatusContainer" class="grid grid-cols-2 gap-2 text-xs">
+          <!-- 4 slots dynamically populated -->
+        </div>
+      </div>
+
+      <!-- 현재 DB 적재 완료 내역 -->
+      <div class="space-y-1.5">
+        <p class="text-xs font-bold text-slate-700">전체 등록된 원본 데이터 파일 목록:</p>
+        <div id="sourceStatsContainer" class="space-y-1.5 max-h-36 overflow-y-auto text-xs"></div>
+      </div>
+
+      <!-- 파일 업로드 드래그앤드롭 영역 -->
       <div class="border-t pt-3 space-y-2">
-        <p class="text-xs font-semibold text-slate-700">새 엑셀 파일 추가 등록:</p>
-        <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center bg-slate-50 hover:bg-slate-100 cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
+        <p class="text-xs font-semibold text-slate-700">새 CSV / XLSX 파일 추가 등록 (다중 선택 가능):</p>
+        <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-4 text-center bg-slate-50 hover:bg-emerald-50/20 cursor-pointer transition" 
+             onclick="document.getElementById('excelFileInput').click()"
+             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropFiles(event)">
           <i class="fa-solid fa-cloud-arrow-up text-2xl text-emerald-600 mb-1"></i>
-          <p class="text-xs font-semibold text-slate-700">클릭하여 추가 엑셀(.xlsx) 선택</p>
-          <p id="selectedExcelName" class="text-[11px] text-slate-400 mt-0.5">멀티시트 & 멀티헤더 자동인식 지원</p>
-          <input type="file" id="excelFileInput" accept=".xlsx,.xls" class="hidden" onchange="handleExcelSelected(event)" />
+          <p class="text-xs font-semibold text-slate-700">클릭하거나 CSV 파일을 여기에 드래그하세요</p>
+          <p id="selectedExcelName" class="text-[11px] text-slate-400 mt-0.5">최대 4개 CSV 일괄 업로드 지원 (CP949/UTF-8 자동 감지)</p>
+          <input type="file" id="excelFileInput" accept=".csv,.xlsx,.xls,.txt" multiple class="hidden" onchange="handleExcelSelected(event)" />
         </div>
         <div id="excelUploadProgress" class="hidden text-xs text-center text-emerald-700 py-1 font-semibold">
           <i class="fa-solid fa-spinner fa-spin mr-1"></i> 데이터 분석 및 적재 중...
         </div>
       </div>
 
-      <div class="flex justify-between items-center pt-2">
-        <button type="button" onclick="syncServerFiles()" class="px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl flex items-center gap-1.5">
+      <div class="flex justify-between items-center pt-2 border-t">
+        <button type="button" onclick="syncServerFiles()" class="px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl flex items-center gap-1.5 transition">
           <i class="fa-solid fa-arrows-rotate"></i> 로컬 파일 전체 재동기화
         </button>
         <div class="flex gap-2">
           <button type="button" onclick="closeModal('excelModal')" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">닫기</button>
-          <button type="button" id="btnUploadExcel" onclick="uploadExcelFile()" disabled class="px-4 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-xl disabled:opacity-40 shadow-sm">업로드</button>
+          <button type="button" id="btnUploadExcel" onclick="uploadDataFiles()" disabled class="px-4 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-xl disabled:opacity-40 shadow-sm transition">업로드 및 적용</button>
         </div>
       </div>
     </div>
@@ -565,6 +812,44 @@
     </div>
   </div>
 
+  <!-- 식약처 19종 내 알레르기 설정 모달 -->
+  <div id="allergyModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between border-b pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">식약처 19종 내 알레르기 관리</h3>
+            <p class="text-[11px] text-slate-500">주의해야 할 유발물질을 등록하면 음식 스캔 시 위험을 경고합니다</p>
+          </div>
+        </div>
+        <button onclick="closeModal('allergyModal')" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="flex items-center justify-between text-xs px-1">
+        <span class="text-slate-600 font-medium">유발물질 선택 (중복 가능):</span>
+        <button type="button" onclick="clearScannerAllergies()" class="text-rose-600 hover:text-rose-700 font-bold underline text-[11px]">
+          전체 해제 (알레르기 없음)
+        </button>
+      </div>
+
+      <div id="scannerModalAllergyGrid" class="grid grid-cols-3 gap-1.5 max-h-60 overflow-y-auto p-1.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+        <!-- 19 allergen items dynamically populated -->
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button type="button" onclick="closeModal('allergyModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">취소</button>
+        <button type="button" onclick="saveScannerAllergies()" class="px-5 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-sm">
+          설정 저장하기
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- 자바스크립트 비즈니스 로직 -->
   <script>
     let currentAnalysis = null;
@@ -578,9 +863,298 @@
       vitamin_a: 700, vitamin_c: 100, vitamin_d: 10, folate: 400
     };
 
+    let userAllergies = [];
+
+    // 식품의약품안전처 「식품등의 표시기준」 제6조 별표 2 법정 19종 알레르기 유발물질 마스터
+    const MFDS_ALLERGENS_LIST = [
+      { 
+        id: "egg", name: "알류(가금류)", short_name: "알류", emoji: "🥚",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 알류(가금류에 한함) 및 그 가공품",
+        ingredients: "달걀, 오리알, 메추리알, 난백, 난황, 마요네즈, 지단, 오믈렛, 스크램블, 빵가루 반죽 계란물",
+        cross: "오리알, 메추리알, 거위알 등 모든 가금류 알",
+        notes: "난백 단백질(오보뮤코이드)은 열에 비교적 안정하여 완숙 조리 시에도 알레르기를 유발할 수 있습니다.",
+        action: "전, 튀김, 볶음밥, 빵류 조리 시 달걀물/지단 제외 요청 필요"
+      },
+      { 
+        id: "milk", name: "우유", short_name: "우유", emoji: "🥛",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 우유 및 유가공품",
+        ingredients: "우유, 분유, 치즈, 버터, 생크림, 크림, 요거트, 연유, 라떼, 유청단백, 탈지분유",
+        cross: "산양유, 양유 및 카제인 함유 유제품",
+        notes: "카제인 및 베타-락토글로불린 알레르기로 유당불내증과 구별되며 급성 반응을 유발할 수 있습니다.",
+        action: "버터, 치즈, 크림, 분유, 마가린 및 유청단백 함유 식품 섭취 주의"
+      },
+      { 
+        id: "buckwheat", name: "메밀", short_name: "메밀", emoji: "🌾",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 메밀 및 그 가공품",
+        ingredients: "메밀, 모밀, 메밀국수, 평양냉면, 막국수, 메밀묵, 메밀전병, 메밀차",
+        cross: "대황 등 마디풀과 식물",
+        notes: "극미량(ppm 단위)으로도 급성 아나필락시스를 유발할 수 있는 고위험 알레르겐입니다.",
+        action: "냉면, 막국수, 소바, 메밀전병 및 동일 제면기 사용 업소 주의"
+      },
+      { 
+        id: "peanut", name: "땅콩", short_name: "땅콩", emoji: "🥜",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 땅콩 및 그 가공품",
+        ingredients: "땅콩, 피넛, 땅콩가루, 땅콩버터, 견과가루, 피넛소스, 동남아/중식 볶음 양념",
+        cross: "루핀, 대두, 완두 등 콩과 식물 및 일부 견과류",
+        notes: "가열 조리 시 항원성이 강화되는 특성이 있으며, 소량으로도 호흡기 증상 및 전신 반응 위험이 높습니다.",
+        action: "땅콩분태, 땅콩버터, 피넛소스, 볶음요리 섭취 시 사전 확인 필수"
+      },
+      { 
+        id: "soybean", name: "대두", short_name: "대두", emoji: "🫘",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 대두 및 그 가공품",
+        ingredients: "대두, 콩, 된장, 간장, 두부, 유부, 고추장, 청국장, 콩나물, 두유, 쌈장, 대두유, 대두레시틴",
+        cross: "기타 콩류, 완두콩, 렌틸콩, 땅콩",
+        notes: "한국 전통 발효 장류(된장, 간장, 고추장)의 핵심 원료로 한식 전반에 광범위하게 잠재되어 있습니다.",
+        action: "된장찌개, 간장 양념, 두부, 유부, 콩나물, 대두유 및 유화제(대두레시틴) 확인"
+      },
+      { 
+        id: "wheat", name: "밀", short_name: "밀", emoji: "🌾",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 밀 및 그 가공품",
+        ingredients: "밀, 밀가루, 소맥분, 빵, 면, 라면, 국수, 스파게티, 튀김옷, 만두피, 케이크, 도넛, 어묵, 간장 원료",
+        cross: "보리, 호밀, 귀리 등 글루텐 함유 곡물",
+        notes: "글루텐(글리아딘, 글루테닌) 매개 소화기 및 피부 반응, 운동유발성 아나필락시스 주의",
+        action: "면류, 빵, 튀김옷, 만두피, 어묵, 간장 제조용 소맥분 함유 여부 확인"
+      },
+      { 
+        id: "mackerel", name: "고등어", short_name: "고등어", emoji: "🐟",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 고등어 및 그 가공품",
+        ingredients: "고등어, 고등어자반, 고등어조림, 고등어구이, 어묵, 생선 육수 베이스",
+        cross: "참치, 꽁치, 삼치 등 등푸른생선 및 기타 어류 파발부민",
+        notes: "생선 근육 단백질 파발부민(Parvalbumin) 및 신선도 저하 시 발생하는 히스타민 중독 유사 증상에 유의해야 합니다.",
+        action: "고등어구이, 조림, 어묵, 생선 육수 농축물 함유 여부 확인"
+      },
+      { 
+        id: "crab", name: "게", short_name: "게", emoji: "🦀",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 게 및 그 가공품",
+        ingredients: "꽃게, 대게, 홍게, 게살, 게장, 간장게장, 양념게장, 게맛살(게 엑기스), 크랩, 킹크랩",
+        cross: "새우, 가재, 랍스터, 집게 등 갑각류 전반",
+        notes: "주요 항원인 트로포미오신(Tropomyosin)은 열에 안정적이므로 고온 가열 조리 후에도 항원성이 유지됩니다.",
+        action: "꽃게탕, 게장, 게살볶음밥, 게맛살(게 엑기스), 짬뽕 해물 육수 주의"
+      },
+      { 
+        id: "shrimp", name: "새우", short_name: "새우", emoji: "🦐",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 새우 및 그 가공품",
+        ingredients: "생새우, 건새우, 새우젓, 새우튀김, 대하, 칵테일새우, 감바스, 김치 양념, 해물 육수",
+        cross: "게, 가재, 랍스터, 연체동물 및 집먼지진드기",
+        notes: "김치 발효 시 사용되는 새우젓 및 육수용 건새우 가루 등 육안으로 식별하기 어려운 형태가 많습니다.",
+        action: "배추김치, 찌개 육수, 튀김, 젓갈류 섭취 전 새우젓 사용 여부 필수 문의"
+      },
+      { 
+        id: "pork", name: "돼지고기", short_name: "돼지고기", emoji: "🥓",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 돼지고기 및 그 가공품",
+        ingredients: "돼지고기, 삼겹살, 목살, 제육, 돈육, 돈가스, 햄, 소시지, 베이컨, 보쌈, 족발, 탕수육, 돈골 육수",
+        cross: "고양이 털 알레르기 환자의 포크-캣(Pork-Cat) 증후군 교차반응",
+        notes: "가공육(햄, 소시지) 및 돈골 농축 육수(라멘, 순대국) 등에 혼합 분말 형태로 널리 사용됩니다.",
+        action: "제육볶음, 돈가스, 햄/소시지, 만두소, 찌개 고명 및 돈골 육수 확인"
+      },
+      { 
+        id: "peach", name: "복숭아", short_name: "복숭아", emoji: "🍑",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 복숭아 및 그 가공품",
+        ingredients: "백도, 황도, 천도복숭아, 복숭아 통조림, 복숭아잼, 복숭아아이스티, 과채가공품",
+        cross: "자두, 살구, 사과, 체리 등 장미과 과일 및 자작나무 꽃가루",
+        notes: "과피(껍질)의 지질전이단백(Pru p 3)은 열과 소화효소에 강해 중증 전신 반응을 유발할 수 있습니다.",
+        action: "생과일, 과일주스, 과채가공품, 샐러드 드레싱, 빙수 토핑 확인"
+      },
+      { 
+        id: "tomato", name: "토마토", short_name: "토마토", emoji: "🍅",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 토마토 및 그 가공품",
+        ingredients: "토마토, 방울토마토, 케첩, 토마토소스, 마리나라, 토마토페이스트, 피자 소스, 퓌레",
+        cross: "감자, 가지, 피망 등 가지과 식물 및 라텍스-과일 증후군",
+        notes: "생토마토뿐만 아니라 조리된 소스, 케첩, 페이스트 형태에서도 알레르기 항원성이 잔존합니다.",
+        action: "케첩, 파스타 소스, 피자 소스, 햄버거 패티 소스, 샐러드 확인"
+      },
+      { 
+        id: "sulfite", name: "아황산류", short_name: "아황산류", emoji: "🧪",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 아황산류를 첨가하여 최종제품에 SO2로서 10mg/kg 이상 함유한 경우",
+        ingredients: "건포도, 건망고, 건과일, 와인, 백포도주, 곶감, 절임류, 물엿가공품, 보존료, 산화방지제",
+        cross: "식품첨가물 산화방지제 및 표백제 과민증",
+        notes: "기관지 천식 환자에게 급성 천명음, 호흡곤란, 아나필락시스 유사 발작을 유발할 수 있습니다.",
+        action: "건포도, 건망고 등 건조과일, 와인, 절임류, 물엿, 과채주스 성분표 확인"
+      },
+      { 
+        id: "walnut", name: "호두", short_name: "호두", emoji: "🧠",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 호두 및 그 가공품",
+        ingredients: "호두, 월넛, 호두분태, 호두과자, 호두파이, 견과 가공품, 샐러드 견과 토핑",
+        cross: "피칸(Pecan), 헤이즐넛, 캐슈넛 등 견과류 전반",
+        notes: "소량으로도 기도 부종 및 아나필락시스를 유발하는 대표적인 고위험 나무 견과류입니다.",
+        action: "호두과자, 베이커리 빵/파이, 시리얼, 견과류 토핑 샐러드 섭취 주의"
+      },
+      { 
+        id: "chicken", name: "닭고기", short_name: "닭고기", emoji: "🍗",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 닭고기 및 그 가공품",
+        ingredients: "치킨, 닭가슴살, 삼계탕, 백숙, 닭볶음탕, 닭갈비, 치킨스톡, 닭 육수 농축분말",
+        cross: "칠면조, 오리고기 및 조류 알레르겐",
+        notes: "닭고기 살코기뿐 아니라 치킨스톡, 육수 농축액, 가공 소시지 혼합육에 함유됩니다.",
+        action: "치킨, 삼계탕, 닭볶음탕, 닭가슴살 샐러드, 치킨스톡 베이스 육수 확인"
+      },
+      { 
+        id: "beef", name: "쇠고기", short_name: "쇠고기", emoji: "🥩",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 쇠고기 및 그 가공품",
+        ingredients: "소고기, 쇠고기, 한우, 불고기, 갈비, 차돌박이, 사골, 우족, 쇠고기 육수, 쇠고기 다시다, 비프스톡",
+        cross: "우유 단백질 알레르기 및 진드기 매개 알파갈(Alpha-gal) 증후군",
+        notes: "소고기 육수, 쇠고기 다시다, 사골 분말스프 등 국물 조미료 성분으로 광범위 사용됩니다.",
+        action: "불고기, 스테이크, 사골곰탕, 미역국, 라면 분말스프 비프 성분 확인"
+      },
+      { 
+        id: "squid", name: "오징어", short_name: "오징어", emoji: "🦑",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 오징어 및 그 가공품",
+        ingredients: "오징어, 진미채, 오징어채, 한치, 물오징어, 오징어순대, 오징어젓, 오징어먹물, 짬뽕 건더기",
+        cross: "문어, 낙지, 꼴뚜기, 주꾸미 등 두족류 및 연체동물",
+        notes: "연체동물 트로포미오신 단백질 알레르기로 건조 가공품에서도 강한 알레르기를 유발합니다.",
+        action: "오징어볶음, 짬뽕, 진미채, 건어물, 해물파전, 젓갈류 섭취 확인"
+      },
+      { 
+        id: "shellfish", name: "조개류", short_name: "조개류", emoji: "🦪",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 조개류(굴, 전복, 홍합 포함) 및 그 가공품",
+        ingredients: "조개, 굴, 전복, 홍합, 바지락, 가리비, 꼬막, 모시조개, 굴소스, 조개스톡, 재첩, 조개젓",
+        cross: "바지락, 꼬막, 가리비, 재첩 등 패류 전반 및 연체류",
+        notes: "중식의 굴소스, 해물 칼국수 육수, 조개젓 등 국물 요리에 빈번히 용출됩니다.",
+        action: "굴소스 조리 요리, 해물 뚝배기, 바지락 칼국수, 패류 육수 확인"
+      },
+      { 
+        id: "pine_nut", name: "잣", short_name: "잣", emoji: "🌲",
+        legal: "식품의약품안전처 고시 「식품등의 표시기준」 제6조 별표 2: 잣 및 그 가공품",
+        ingredients: "잣, 잣가루, 잣죽, 잣고명, 한과 고명, 수정과, 샐러드 드레싱",
+        cross: "기타 견과류 및 솔과 식물",
+        notes: "한국 전통 궁중음식, 한과, 죽, 샐러드에 고명으로 자주 사용되며 아나필락시스 반응에 주의해야 합니다.",
+        action: "잣죽, 수정과, 한과, 신선로, 떡 및 고급 소스류 고명 확인"
+      }
+    ];
+
     window.addEventListener('DOMContentLoaded', () => {
       fetchSystemStats();
+      loadUserAllergies();
+      renderMainAllergyGrid();
+      renderScannerModalAllergyGrid();
     });
+
+    function loadUserAllergies() {
+      try {
+        const rawLocal = localStorage.getItem("USER_ALLERGIES_PROFILE_MFDS");
+        if (rawLocal) {
+          userAllergies = JSON.parse(rawLocal);
+        } else {
+          const rawLegacy = localStorage.getItem("USER_ALLERGIES_PROFILE");
+          if (rawLegacy) userAllergies = JSON.parse(rawLegacy);
+        }
+      } catch (e) {
+        console.error("loadUserAllergies error:", e);
+      }
+      updateAllergyUI();
+    }
+
+    function saveUserAllergies() {
+      try {
+        localStorage.setItem("USER_ALLERGIES_PROFILE_MFDS", JSON.stringify(userAllergies));
+        localStorage.setItem("USER_ALLERGIES_PROFILE", JSON.stringify(userAllergies));
+      } catch (e) {
+        console.error("saveUserAllergies error:", e);
+      }
+      updateAllergyUI();
+      if (currentAnalysis) {
+        renderAnalysisResults(currentAnalysis);
+      }
+    }
+
+    function updateAllergyUI() {
+      // 1. 헤더 배지
+      const headerBtn = document.getElementById("scannerAllergyBtnText");
+      if (headerBtn) {
+        headerBtn.innerText = userAllergies.length > 0 ? `알러지 (${userAllergies.length})` : "알러지";
+      }
+
+      // 2. 메인 패널 배지
+      const mainBadge = document.getElementById("mainAllergyCountBadge");
+      if (mainBadge) {
+        if (userAllergies.length === 0) {
+          mainBadge.innerText = "선택 안 됨 (일반 모드)";
+          mainBadge.className = "bg-slate-100 text-slate-600 text-[10.5px] px-2 py-0.5 rounded-full font-bold";
+        } else {
+          const names = userAllergies.map(id => {
+            const m = MFDS_ALLERGENS_LIST.find(x => x.id === id);
+            return m ? `${m.emoji} ${m.short_name}` : id;
+          }).slice(0, 3).join(", ");
+          const suffix = userAllergies.length > 3 ? ` 외 ${userAllergies.length - 3}종` : "";
+          mainBadge.innerText = `${userAllergies.length}종 선택됨: ${names}${suffix}`;
+          mainBadge.className = "bg-rose-100 text-rose-700 text-[10.5px] px-2 py-0.5 rounded-full font-black border border-rose-200 animate-pulse";
+        }
+      }
+
+      renderMainAllergyGrid();
+      renderScannerModalAllergyGrid();
+    }
+
+    function renderMainAllergyGrid() {
+      const grid = document.getElementById("mainAllergyGrid");
+      if (!grid) return;
+      grid.innerHTML = MFDS_ALLERGENS_LIST.map(a => {
+        const isSelected = userAllergies.includes(a.id);
+        const activeClass = isSelected
+          ? "bg-rose-600 text-white border-rose-600 font-bold shadow-sm ring-2 ring-rose-400/40"
+          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300";
+        return `
+          <button type="button" onclick="toggleScannerAllergy('${a.id}')"
+                  class="p-2 rounded-xl border text-xs transition flex items-center justify-between gap-1 text-left ${activeClass}"
+                  title="${a.name}: ${a.notes}">
+            <span class="truncate">${a.emoji} ${a.short_name}</span>
+            <span class="text-xs font-black">${isSelected ? '✓' : ''}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderScannerModalAllergyGrid() {
+      const grid = document.getElementById("scannerModalAllergyGrid");
+      if (!grid) return;
+      grid.innerHTML = MFDS_ALLERGENS_LIST.map(a => {
+        const isSelected = userAllergies.includes(a.id);
+        const activeClass = isSelected
+          ? "bg-rose-600 text-white border-rose-600 font-bold shadow-sm ring-2 ring-rose-400/40"
+          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50";
+        return `
+          <button type="button" onclick="toggleScannerAllergy('${a.id}')"
+                  class="p-2 rounded-xl border text-xs transition flex items-center justify-between gap-1 text-left ${activeClass}">
+            <span class="truncate">${a.emoji} ${a.short_name}</span>
+            <span class="text-xs font-black">${isSelected ? '✓' : ''}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function toggleScannerAllergy(id) {
+      const idx = userAllergies.indexOf(id);
+      if (idx >= 0) userAllergies.splice(idx, 1);
+      else userAllergies.push(id);
+      saveUserAllergies();
+    }
+
+    function presetAllergies(list) {
+      userAllergies = [...new Set([...list])];
+      saveUserAllergies();
+    }
+
+    function clearScannerAllergies() {
+      userAllergies = [];
+      saveUserAllergies();
+    }
+
+    function saveScannerAllergies() {
+      saveUserAllergies();
+      closeModal("allergyModal");
+    }
+
+    function toggleMainAllergyCollapse() {
+      const content = document.getElementById("mainAllergyContent");
+      const icon = document.getElementById("mainAllergyCollapseIcon");
+      if (!content || !icon) return;
+      if (content.classList.contains("hidden")) {
+        content.classList.remove("hidden");
+        icon.className = "fa-solid fa-chevron-up";
+      } else {
+        content.classList.add("hidden");
+        icon.className = "fa-solid fa-chevron-down";
+      }
+    }
 
     async function fetchSystemStats() {
       try {
@@ -597,9 +1171,42 @@
         }
 
         renderSourceStats(data.source_stats || []);
+        renderSlotsStatus(data.slots_status || []);
       } catch (e) {
         console.error("Stats fetch error:", e);
       }
+    }
+
+    function renderSlotsStatus(slots) {
+      const container = document.getElementById('slotsStatusContainer');
+      if (!container) return;
+      if (!slots || slots.length === 0) {
+        container.innerHTML = '<div class="col-span-2 text-slate-400 py-2 text-center text-xs">식약처 4대 DB 정보 로딩 중...</div>';
+        return;
+      }
+      container.innerHTML = slots.map(s => {
+        const isLoaded = s.status === 'loaded';
+        const borderClass = isLoaded ? 'border-emerald-300 bg-emerald-50/50 shadow-xs' : 'border-slate-200 bg-slate-50/60';
+        const badgeClass = isLoaded ? 'bg-emerald-100 text-emerald-800 font-bold border border-emerald-200' : 'bg-slate-200 text-slate-600 font-medium';
+        const icon = isLoaded ? '<i class="fa-solid fa-circle-check text-emerald-600"></i>' : '<i class="fa-regular fa-clock text-slate-400"></i>';
+        const countText = isLoaded ? `${s.count.toLocaleString()}건` : '미적재 (파일 추가 요망)';
+        return `
+          <div class="p-2.5 rounded-xl border ${borderClass} space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5 truncate">
+                ${icon}
+                <span class="truncate">${s.name}</span>
+              </span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded ${badgeClass}">
+                ${countText}
+              </span>
+            </div>
+            <p class="text-[10.5px] text-slate-500 leading-tight truncate" title="${s.description || ''}">
+              ${s.description || '식품안전나라 공공데이터포털 기준'}
+            </p>
+          </div>
+        `;
+      }).join('');
     }
 
     function renderSourceStats(sources) {
@@ -665,6 +1272,8 @@
       document.getElementById(id).classList.add('hidden');
     }
 
+    let currentUploadedFile = null;
+
     function triggerFileInput() {
       if (document.getElementById('previewContainer').classList.contains('hidden')) {
         document.getElementById('fileInput').click();
@@ -674,28 +1283,37 @@
     function handleFileSelected(event) {
       const file = event.target.files[0];
       if (!file) return;
+      currentUploadedFile = file;
+
+      // 1. 새 사진을 올리면 이전에 입력/선택되어 있던 음식명 텍스트 초기화
+      const manualInput = document.getElementById('manualFoodInput');
+      if (manualInput) manualInput.value = '';
 
       const reader = new FileReader();
       reader.onload = (e) => {
         document.getElementById('imagePreview').src = e.target.result;
         document.getElementById('uploadPlaceholder').classList.add('hidden');
         document.getElementById('previewContainer').classList.remove('hidden');
-        startAnalysis(file);
+        // 새 사진은 남아있는 텍스트 힌트 없이 사진 자체로 분석
+        startAnalysis(file, '');
       };
       reader.readAsDataURL(file);
     }
 
     function resetUpload(event) {
-      event.stopPropagation();
+      if (event) event.stopPropagation();
       document.getElementById('fileInput').value = '';
+      const manualInput = document.getElementById('manualFoodInput');
+      if (manualInput) manualInput.value = '';
       document.getElementById('uploadPlaceholder').classList.remove('hidden');
       document.getElementById('previewContainer').classList.add('hidden');
       document.getElementById('resultSection').classList.add('hidden');
       document.getElementById('analysisLoading').classList.add('hidden');
+      currentUploadedFile = null;
       currentAnalysis = null;
     }
 
-    async function startAnalysis(file) {
+    async function startAnalysis(file, customHint) {
       const loading = document.getElementById('analysisLoading');
       const scanLine = document.getElementById('scanLine');
       const resultSection = document.getElementById('resultSection');
@@ -704,8 +1322,27 @@
       scanLine.classList.remove('hidden');
       resultSection.classList.add('hidden');
 
+      // customHint가 명시적으로 전달된 경우(빈 문자열 '' 포함) 우선 사용.
+      // 사진(file)이 없을 때만 입력창(#manualFoodInput) 값을 힌트로 참조.
+      let hint = '';
+      if (typeof customHint === 'string') {
+        hint = customHint.trim();
+      } else if (!file) {
+        hint = document.getElementById('manualFoodInput')?.value?.trim() || '';
+      }
+
       const formData = new FormData();
-      formData.append('file', file);
+      if (file) {
+        formData.append('file', file);
+      } else {
+        // 더미 픽셀 이미지 생성 (파일명에 힌트 부여)
+        const dummyBlob = new Blob([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 10, 73, 68, 65, 84, 120, 156, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 45, 180, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130])], { type: 'image/png' });
+        formData.append('file', dummyBlob, (hint || '음식') + '.png');
+      }
+
+      if (hint) {
+        formData.append('food_hint', hint);
+      }
 
       try {
         const response = await fetch('/api/analyze', {
@@ -726,6 +1363,21 @@
         loading.classList.add('hidden');
         scanLine.classList.add('hidden');
       }
+    }
+
+    function searchAndApplyManualFood() {
+      const val = document.getElementById('manualFoodInput')?.value?.trim();
+      if (!val) {
+        alert("분석하고자 하는 음식명을 입력해 주세요 (예: 돈까스, 라면, 김치찌개)");
+        return;
+      }
+      startAnalysis(currentUploadedFile, val);
+    }
+
+    function quickSelectFood(foodName) {
+      const input = document.getElementById('manualFoodInput');
+      if (input) input.value = foodName;
+      startAnalysis(currentUploadedFile, foodName);
     }
 
     function renderAnalysisResults(data) {
@@ -751,8 +1403,128 @@
       }
 
       document.getElementById('detectedCountBadge').innerText = `${data.foods.length}개`;
+      
+      // 분석 완료 시, 식별된 대표 음식명을 검색창에 자동으로 동기화 표시
+      const manualInput = document.getElementById('manualFoodInput');
+      if (manualInput && data.foods && data.foods.length > 0) {
+        manualInput.value = data.foods[0].name;
+      }
+
+      renderAllergenReport(data.total_allergens || []);
       renderFoodCards();
       updateTotals();
+    }
+
+    function renderAllergenReport(totalAllergens) {
+      const container = document.getElementById("detectedAllergensContainer");
+      const badge = document.getElementById("detectedAllergenCountBadge");
+      const safeSummary = document.getElementById("safeAllergenSummaryText");
+      const safeList = document.getElementById("safeAllergensList");
+      const alertBanner = document.getElementById("allergyAlertBanner");
+      const alertMsg = document.getElementById("allergyAlertMessage");
+
+      if (!container) return;
+
+      const detectedIds = new Set(totalAllergens.map(a => a.id));
+      badge.textContent = `${totalAllergens.length}종 검출`;
+
+      // 1. 등록된 알러지 매칭 긴급 경보 배너
+      const triggered = totalAllergens.filter(a => userAllergies.includes(a.id));
+      if (triggered.length > 0) {
+        alertBanner.classList.remove("hidden");
+        alertMsg.innerHTML = `
+          회원님이 등록하신 알레르기 유발물질 <b>[${triggered.map(t => `${t.emoji || ''} ${t.short_name || t.name} (${t.max_percentage || 80}%)`).join(', ')}]</b>이(가) 
+          식단에서 감지되었습니다! 알레르기 유발 위험이 있으니 섭취 전 재료를 반드시 확인하세요.
+        `;
+      } else {
+        alertBanner.classList.add("hidden");
+      }
+
+      // 2. 검출 유발물질 상세 리스트 렌더링
+      if (totalAllergens.length === 0) {
+        container.innerHTML = `
+          <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2 font-medium">
+            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+            <span>식약처 19종 법정 알레르기 유발물질이 검출되지 않은 안전 식단입니다.</span>
+          </div>
+        `;
+      } else {
+        container.innerHTML = totalAllergens.map(a => {
+          const isTriggered = userAllergies.includes(a.id);
+          const pct = a.max_percentage || 0;
+          let colorClass = "from-amber-400 to-orange-500";
+          let badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
+          let borderHighlight = isTriggered ? "border-rose-500 bg-rose-50/50 ring-1 ring-rose-400" : "border-slate-200 bg-slate-50/80";
+
+          if (pct >= 85) {
+            colorClass = "from-rose-500 to-red-600";
+            badgeColor = "bg-rose-100 text-rose-800 border-rose-300";
+          } else if (pct >= 60) {
+            colorClass = "from-amber-400 to-orange-500";
+            badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
+          } else {
+            colorClass = "from-sky-400 to-blue-500";
+            badgeColor = "bg-sky-100 text-sky-800 border-sky-300";
+          }
+
+          return `
+            <div class="p-3 rounded-xl border ${borderHighlight} space-y-2 text-xs">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-base">${a.emoji || '⚠️'}</span>
+                  <span class="font-bold text-slate-900">${a.name}</span>
+                  ${isTriggered ? `<span class="bg-rose-600 text-white font-black text-[9px] px-1.5 py-0.5 rounded-full animate-bounce">🚨 내 알러지 매칭</span>` : ''}
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="font-black text-sm text-slate-800">${pct}%</span>
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${badgeColor}">
+                    ${a.risk_level || '주의'}
+                  </span>
+                </div>
+              </div>
+              <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r ${colorClass}" style="width: ${pct}%"></div>
+              </div>
+              <div class="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                <div class="text-[11px] text-slate-500 flex items-start gap-1 flex-1 pr-2 truncate">
+                  <span class="font-semibold text-slate-700 shrink-0">추정 근거:</span>
+                  <span class="text-slate-600 leading-tight truncate">${a.reasons ? a.reasons.join(', ') : '전통 조리법 및 비전 시각 단서 기반'}</span>
+                </div>
+                <button type="button" onclick="openAllergyProofModalById('${a.id}')" 
+                        class="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg text-[10.5px] font-bold flex items-center gap-1 transition shrink-0 shadow-xs">
+                  <i class="fa-solid fa-shield-virus text-[10px]"></i> 추론 근거 보기
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // 3. 미검출 안심 칩
+      const safeAllergens = MFDS_ALLERGENS_LIST.filter(a => !detectedIds.has(a.id));
+      safeSummary.textContent = `19종 중 ${safeAllergens.length}종 미검출 (안심)`;
+      safeList.innerHTML = safeAllergens.map(a => `
+        <button type="button" onclick="openAllergyProofModalById('${a.id}')" 
+                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg border border-slate-200 text-[10.5px] flex items-center gap-1 font-medium transition cursor-pointer"
+                title="클릭하여 식약처 19종 법적 기준 및 임상 정보 확인">
+          <span>${a.emoji}</span>
+          <span>${a.short_name}</span>
+          <span class="text-emerald-600 font-bold text-[9px]">안전</span>
+        </button>
+      `).join("");
+    }
+
+    function toggleSafeAllergens() {
+      const list = document.getElementById("safeAllergensList");
+      const icon = document.getElementById("safeAllergenToggleIcon");
+      if (!list || !icon) return;
+      if (list.classList.contains("hidden")) {
+        list.classList.remove("hidden");
+        icon.className = "fa-solid fa-chevron-up text-[10px]";
+      } else {
+        list.classList.add("hidden");
+        icon.className = "fa-solid fa-chevron-down text-[10px]";
+      }
     }
 
     function renderFoodCards() {
@@ -765,6 +1537,28 @@
         
         const mins = food.minerals || {};
         const vits = food.vitamins || {};
+        const foodAllergens = food.allergens || [];
+
+        // 개별 음식 알러지 칩
+        const allergenBadgesHtml = foodAllergens.length > 0
+          ? foodAllergens.map(a => {
+              const isMatch = userAllergies.includes(a.id);
+              const badgeClass = isMatch
+                ? "bg-rose-500/20 text-rose-700 border-rose-400 font-black animate-pulse"
+                : "bg-amber-50 text-amber-800 border-amber-200";
+              const pct = a.percentage || Math.round((a.probability || 0.8) * 100);
+              return `
+                <button type="button" onclick="openAllergyProofModalById('${a.id}', ${index})" 
+                        class="px-2 py-0.5 rounded-md border text-[10px] flex items-center gap-1 cursor-pointer transition hover:opacity-80 shadow-xs ${badgeClass}" 
+                        title="${a.reason || ''} (클릭하여 식약처 추론 근거 확인)">
+                  <span>${a.emoji || '⚠️'}</span>
+                  <span>${a.short_name || a.name}</span>
+                  <span class="font-bold">${pct}%</span>
+                  ${isMatch ? '<span class="text-rose-600 font-bold">🚨</span>' : ''}
+                </button>
+              `;
+            }).join("")
+          : `<span class="text-[10px] text-emerald-600 font-medium">✓ 유발물질 미검출</span>`;
 
         card.innerHTML = `
           <div class="flex items-start justify-between">
@@ -785,6 +1579,29 @@
               <button onclick="openSearchModalFor(${index})" class="text-xs text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1 transition">
                 <i class="fa-solid fa-rotate text-xs"></i> 변경
               </button>
+            </div>
+          </div>
+
+          <!-- 개별 음식 알레르기 예측 태그 -->
+          <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-1.5">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-bold text-slate-700 flex items-center gap-1">
+                <span>🛡️</span> <span>식약처 19종 알레르기 분석:</span>
+              </span>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10.5px] font-semibold ${foodAllergens.length > 0 ? 'text-amber-700' : 'text-emerald-600'}">
+                  ${foodAllergens.length > 0 ? `${foodAllergens.length}종 유발물질 검출` : '검출 안 됨 (안전)'}
+                </span>
+                ${foodAllergens.length > 0 ? `
+                  <button type="button" onclick="openFoodAllergyProof(${index})" 
+                          class="text-[10px] text-amber-800 hover:text-amber-950 bg-amber-100/80 hover:bg-amber-200 px-2 py-0.5 rounded-md font-bold transition flex items-center gap-1">
+                    <i class="fa-solid fa-shield-virus text-[9px]"></i> 추론 근거
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-1">
+              ${allergenBadgesHtml}
             </div>
           </div>
 
@@ -979,9 +1796,12 @@
 
     function openSearchModalFor(index) {
       targetReplaceIndex = index;
-      document.getElementById('foodSearchInput').value = currentAnalysis.foods[index].name;
+      const initialName = (currentAnalysis && currentAnalysis.foods && currentAnalysis.foods[index])
+        ? currentAnalysis.foods[index].name
+        : '김치찌개';
+      document.getElementById('foodSearchInput').value = initialName;
       openModal('searchModal');
-      performSearch(currentAnalysis.foods[index].name);
+      performSearch(initialName);
     }
 
     function debounceSearch() {
@@ -1028,46 +1848,88 @@
       }
     }
 
-    function replaceFoodItem(newItem) {
-      if (targetReplaceIndex === null) return;
-      const target = currentAnalysis.foods[targetReplaceIndex];
-      const grams = target.consumed_grams;
-      const ratio = grams / (newItem.serving_size || 100.0);
+    async function replaceFoodItem(newItem) {
+      if (targetReplaceIndex === null) targetReplaceIndex = 0;
 
-      currentAnalysis.foods[targetReplaceIndex] = {
-        food_id: newItem.id,
-        name: newItem.name,
-        detected_name: target.detected_name,
-        category: newItem.category || "기타",
-        serving_size_ref: newItem.serving_size || 100.0,
-        consumed_grams: grams,
-        serving_ratio: Math.round(ratio * 100) / 100,
-        calories: Math.round(newItem.calories * ratio * 10) / 10,
-        carbohydrates: Math.round(newItem.carbohydrates * ratio * 10) / 10,
-        protein: Math.round(newItem.protein * ratio * 10) / 10,
-        fat: Math.round(newItem.fat * ratio * 10) / 10,
-        sugar: Math.round(newItem.sugar * ratio * 10) / 10,
-        sodium: Math.round(newItem.sodium * ratio * 10) / 10,
-        minerals: {
-          calcium: Math.round((newItem.calcium || 0) * ratio * 10) / 10,
-          iron: Math.round((newItem.iron || 0) * ratio * 100) / 100,
-          magnesium: Math.round((newItem.magnesium || 0) * ratio * 10) / 10,
-          potassium: Math.round((newItem.potassium || 0) * ratio * 10) / 10,
-          zinc: Math.round((newItem.zinc || 0) * ratio * 100) / 100,
-        },
-        vitamins: {
-          fiber: Math.round((newItem.fiber || 0) * ratio * 10) / 10,
-          vitamin_a: Math.round((newItem.vitamin_a || 0) * ratio * 10) / 10,
-          vitamin_c: Math.round((newItem.vitamin_c || 0) * ratio * 10) / 10,
-          vitamin_d: Math.round((newItem.vitamin_d || 0) * ratio * 100) / 100,
-          folate: Math.round((newItem.folate || 0) * ratio * 10) / 10,
-        },
-        visual_cues: target.visual_cues
-      };
+      if (!currentAnalysis) {
+        currentAnalysis = {
+          is_mock: true,
+          diet_summary: `${newItem.name} 식단`,
+          foods: [],
+          total_allergens: []
+        };
+      }
+
+      const target = currentAnalysis.foods[targetReplaceIndex] || {};
+      const grams = target.consumed_grams || newItem.serving_size || 200.0;
+
+      try {
+        const res = await fetch('/api/change-food', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ food_id: newItem.id, grams: grams })
+        });
+        if (res.ok) {
+          const calcData = await res.json();
+          currentAnalysis.foods[targetReplaceIndex] = calcData;
+        } else {
+          const ratio = grams / (newItem.serving_size || 100.0);
+          currentAnalysis.foods[targetReplaceIndex] = {
+            ...newItem,
+            food_id: newItem.id,
+            name: newItem.name,
+            consumed_grams: grams,
+            calories: Math.round(newItem.calories * ratio * 10) / 10,
+            carbohydrates: Math.round(newItem.carbohydrates * ratio * 10) / 10,
+            protein: Math.round(newItem.protein * ratio * 10) / 10,
+            fat: Math.round(newItem.fat * ratio * 10) / 10,
+            sugar: Math.round(newItem.sugar * ratio * 10) / 10,
+            sodium: Math.round(newItem.sodium * ratio * 10) / 10,
+            visual_cues: "식약처 DB 공식 검증 데이터"
+          };
+        }
+      } catch (e) {
+        console.warn("change-food API 호출 실패:", e);
+      }
 
       closeModal('searchModal');
+      document.getElementById('resultSection').classList.remove('hidden');
+      document.getElementById('dietSummaryText').innerText = `식약처 34.5만 DB: ${currentAnalysis.foods[0].name} 식단`;
+      recalculateTotalAllergens();
       renderFoodCards();
       updateTotals();
+    }
+
+    function recalculateTotalAllergens() {
+      if (!currentAnalysis || !currentAnalysis.foods) return;
+      const allergenMap = {};
+      currentAnalysis.foods.forEach(f => {
+        (f.allergens || []).forEach(a => {
+          if (!allergenMap[a.id]) {
+            allergenMap[a.id] = { 
+              ...a, 
+              count: 1, 
+              max_probability: a.probability || 0.8, 
+              max_percentage: a.percentage || Math.round((a.probability || 0.8) * 100), 
+              reasons: [a.reason || `${f.name} 함유`] 
+            };
+          } else {
+            allergenMap[a.id].count += 1;
+            const prob = a.probability || 0.8;
+            if (prob > allergenMap[a.id].max_probability) {
+              allergenMap[a.id].max_probability = prob;
+              allergenMap[a.id].max_percentage = a.percentage || Math.round(prob * 100);
+            }
+            if (a.reason && !allergenMap[a.id].reasons.includes(a.reason)) {
+              allergenMap[a.id].reasons.push(a.reason);
+            }
+          }
+        });
+      });
+      const totals = Object.values(allergenMap);
+      totals.sort((a, b) => b.max_percentage - a.max_percentage);
+      currentAnalysis.total_allergens = totals;
+      renderAllergenReport(totals);
     }
 
     async function saveApiKey() {
@@ -1095,16 +1957,48 @@
       }
     }
 
+    let selectedUploadFiles = [];
+
     function handleExcelSelected(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      selectedExcelFile = file;
-      document.getElementById('selectedExcelName').innerText = `${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+      selectedUploadFiles = files;
+      const fileNames = files.map(f => f.name).join(', ');
+      const totalMb = (files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(1);
+      document.getElementById('selectedExcelName').innerText = `${files.length}개 파일 선택됨: ${fileNames} (총 ${totalMb} MB)`;
       document.getElementById('btnUploadExcel').disabled = false;
     }
 
-    async function uploadExcelFile() {
-      if (!selectedExcelFile) return;
+    function handleDragOver(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.classList.add('border-emerald-500', 'bg-emerald-50/50');
+    }
+
+    function handleDragLeave(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.classList.remove('border-emerald-500', 'bg-emerald-50/50');
+    }
+
+    function handleDropFiles(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.classList.remove('border-emerald-500', 'bg-emerald-50/50');
+      const files = Array.from(event.dataTransfer.files || []);
+      if (files.length === 0) return;
+      selectedUploadFiles = files;
+      const fileNames = files.map(f => f.name).join(', ');
+      const totalMb = (files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(1);
+      document.getElementById('selectedExcelName').innerText = `${files.length}개 파일 선택됨: ${fileNames} (총 ${totalMb} MB)`;
+      document.getElementById('btnUploadExcel').disabled = false;
+    }
+
+    async function uploadDataFiles() {
+      if (!selectedUploadFiles || selectedUploadFiles.length === 0) {
+        alert("업로드할 식약처 CSV/XLSX 파일을 선택해 주세요.");
+        return;
+      }
 
       const progress = document.getElementById('excelUploadProgress');
       const btn = document.getElementById('btnUploadExcel');
@@ -1112,18 +2006,23 @@
       btn.disabled = true;
 
       const formData = new FormData();
-      formData.append('file', selectedExcelFile);
+      selectedUploadFiles.forEach(f => {
+        formData.append('files', f);
+      });
 
       try {
-        const res = await fetch('/api/upload-excel', {
+        const res = await fetch('/api/upload-csv', {
           method: 'POST',
           body: formData
         });
         const data = await res.json();
         if (res.ok) {
-          alert(data.message || "엑셀 DB가 성공적으로 등록되었습니다!");
+          const slotNames = Object.keys(data.slots || {}).map(k => `${data.slots[k].name}: ${data.slots[k].count.toLocaleString()}건`).join('\n• ');
+          alert(`식약처 DB 적재 완료!\n총 추가된 데이터: ${data.total_imported.toLocaleString()}건\n\n• ${slotNames}`);
           closeModal('excelModal');
           fetchSystemStats();
+          selectedUploadFiles = [];
+          document.getElementById('selectedExcelName').innerText = "최대 4개 CSV 일괄 업로드 지원 (CP949/UTF-8 자동 감지)";
         } else {
           alert("등록 실패: " + (data.detail || "오류"));
         }
@@ -1133,6 +2032,142 @@
         progress.classList.add('hidden');
         btn.disabled = false;
       }
+    }
+
+    async function uploadExcelFile() {
+      return uploadDataFiles();
+    }
+
+    // [핵심] 식약처 19종 법정 알레르기 추론 근거 검증 모달 열기
+    function openAllergyProofModalById(allergenId, foodIndex = null) {
+      const meta = MFDS_ALLERGENS_LIST.find(x => x.id === allergenId);
+      if (!meta) {
+        alert("알레르기 유발물질 정보를 찾을 수 없습니다.");
+        return;
+      }
+
+      const isUserAllergic = userAllergies.includes(allergenId);
+
+      // 전체 또는 개별 음식에서 이 알레르겐 검출 내역 탐색
+      let detectedItem = null;
+      if (currentAnalysis && currentAnalysis.total_allergens) {
+        detectedItem = currentAnalysis.total_allergens.find(x => x.id === allergenId);
+      }
+
+      let detectedReasons = [];
+      if (currentAnalysis && currentAnalysis.foods) {
+        currentAnalysis.foods.forEach((f, idx) => {
+          if (foodIndex !== null && idx !== foodIndex) return;
+          const match = (f.allergens || []).find(a => a.id === allergenId);
+          if (match) {
+            const r = match.reason || `${f.name} 조리 원재료 및 조리법 추론`;
+            const pct = match.percentage || Math.round((match.probability || 0.8) * 100);
+            detectedReasons.push(`
+              <div class="p-2.5 bg-white rounded-xl border border-slate-200 space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                    <span class="text-base font-bold">${f.name}</span>
+                    <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${f.category || '음식'}</span>
+                  </span>
+                  <span class="text-[10.5px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                    포함 위험 확률 ${pct}%
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-600 pl-0.5">
+                  <i class="fa-solid fa-arrow-turn-down-right text-slate-400 mr-1"></i>${r}
+                </p>
+              </div>
+            `);
+          }
+        });
+      }
+
+      const pct = detectedItem ? (detectedItem.max_percentage || 80) : (detectedReasons.length > 0 ? 80 : 0);
+      const riskLevel = detectedItem ? (detectedItem.risk_level || (pct >= 85 ? '고위험' : pct >= 60 ? '주의' : '안전')) : (pct > 0 ? '주의' : '안전');
+
+      // 1. 상단 요약 카드
+      const headerCard = document.getElementById('allergyProofHeaderCard');
+      let headerBorder = isUserAllergic ? 'border-rose-400 bg-rose-50/70 ring-1 ring-rose-400' : 'border-amber-300 bg-amber-50/60';
+      headerCard.className = `p-3.5 rounded-2xl border ${headerBorder} space-y-2 text-xs`;
+      headerCard.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <span class="text-3xl">${meta.emoji}</span>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h4 class="font-black text-slate-900 text-base">${meta.name}</h4>
+                <span class="text-[10.5px] bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded font-bold">${meta.short_name}</span>
+                ${isUserAllergic ? '<span class="bg-rose-600 text-white font-black text-[9.5px] px-2 py-0.5 rounded-full animate-bounce">🚨 내 알러지 일치</span>' : '<span class="bg-slate-100 text-slate-600 text-[9.5px] px-1.5 py-0.5 rounded">일반 알레르기</span>'}
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">식약처 고시 「식품등의 표시기준」 법정 19종 의무표시 물질</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="font-black text-lg text-slate-900">${pct}%</div>
+            <span class="text-[10.5px] font-bold px-2 py-0.5 rounded ${pct >= 85 ? 'bg-rose-100 text-rose-800 border border-rose-300' : pct >= 60 ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'}">
+              ${riskLevel}
+            </span>
+          </div>
+        </div>
+        ${isUserAllergic ? `
+          <div class="bg-rose-100/90 border border-rose-300 rounded-xl p-2.5 text-rose-900 text-[11px] font-bold flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i>
+            <span>[경고] 사용자가 직접 등록한 위험 알레르기 항목입니다. 해당 음식을 절대 섭취하지 마시거나 원재료를 철저히 검증하십시오.</span>
+          </div>
+        ` : ''}
+      `;
+
+      // 2. 검출된 원재료 및 조리법 근거 목록
+      const reasonsList = document.getElementById('allergyProofReasonsList');
+      if (detectedReasons.length > 0) {
+        reasonsList.innerHTML = detectedReasons.join('');
+      } else {
+        reasonsList.innerHTML = `
+          <div class="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-700 space-y-1">
+            <div class="font-bold text-slate-800">대표 사용 식재료 및 잠재 식품:</div>
+            <p class="text-[11px] text-slate-600">${meta.ingredients}</p>
+          </div>
+        `;
+      }
+
+      // 3. 법적 근거
+      document.getElementById('allergyProofLegalBasis').innerText = meta.legal;
+
+      // 4. 교차반응 및 임상 주의점
+      document.getElementById('allergyProofCrossReactivity').innerHTML = `<strong>• 주요 교차 반응:</strong> ${meta.cross}`;
+      document.getElementById('allergyProofClinicalNotes').innerHTML = `<strong>• 임상 및 영양학적 특성:</strong> ${meta.notes}`;
+
+      // 5. 행동 가이드
+      document.getElementById('allergyProofActionGuide').innerText = meta.action;
+
+      openModal('allergyProofModal');
+    }
+
+    function openFirstTriggeredAllergyProof() {
+      if (!currentAnalysis) {
+        alert("스캔된 음식 정보가 없습니다. 먼저 사진을 업로드해 주세요.");
+        return;
+      }
+      const triggered = (currentAnalysis.total_allergens || []).filter(a => userAllergies.includes(a.id));
+      if (triggered.length > 0) {
+        openAllergyProofModalById(triggered[0].id);
+      } else if (currentAnalysis.total_allergens && currentAnalysis.total_allergens.length > 0) {
+        openAllergyProofModalById(currentAnalysis.total_allergens[0].id);
+      } else {
+        alert("검출된 알레르기 유발물질이 없습니다.");
+      }
+    }
+
+    function openFoodAllergyProof(foodIndex) {
+      if (!currentAnalysis || !currentAnalysis.foods || !currentAnalysis.foods[foodIndex]) return;
+      const food = currentAnalysis.foods[foodIndex];
+      const allergens = food.allergens || [];
+      if (allergens.length === 0) {
+        alert(`[${food.name}] 에는 식약처 19종 법정 알레르기 유발물질이 검출되지 않았습니다.`);
+        return;
+      }
+      const match = allergens.find(a => userAllergies.includes(a.id)) || allergens[0];
+      openAllergyProofModalById(match.id, foodIndex);
     }
 
     // [핵심] 식약처 DB 원본 및 수학적 산출 공식 검증 모달 열기

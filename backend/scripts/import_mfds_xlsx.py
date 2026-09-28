@@ -1,7 +1,8 @@
 """
-식품의약품안전처 및 농촌진흥청 영양성분 DB 엑셀(.xlsx) 고속 자동 임포터 (v3.0)
-- 탄/단/지/당/나트륨뿐만 아니라,
-  주요 무기질(칼슘, 철, 마그네슘, 칼륨, 아연) 및 주요 비타민(비타민 A, C, D, 엽산, 식이섬유)을 완벽 지원합니다.
+식품의약품안전처 및 농촌진흥청 영양성분 DB 고속 자동 임포터 (v4.0 - CSV & XLSX 완벽 지원)
+- 4대 DB(음식DB, 가공식품DB, 농축수산물DB, 건강기능식품DB) 지원
+- 한국 공공데이터 CSV 인코딩(CP949, EUC-KR, UTF-8, UTF-8-SIG) 및 구분자(, \t ;) 자동 감지
+- 탄/단/지/당/나트륨뿐만 아니라 주요 무기질(칼슘, 철, 마그네슘, 칼륨, 아연) 및 주요 비타민(비타민 A, C, D, 엽산, 식이섬유) 완벽 지원
 """
 
 import os
@@ -97,6 +98,19 @@ COLUMN_MAPPINGS = {
         "엽산(μg DFE)", "엽산(ug DFE)", "엽산(μg)", "엽산(ug)", "엽산", "FOLATE", "AMT_NUM23"
     ]
 }
+
+def classify_mfds_category(filename: str) -> str:
+    """식약처 4대 DB 카테고리 자동 분류"""
+    f = filename.lower()
+    if "음식" in f or "외식" in f or "조리" in f:
+        return "음식DB (외식/조리)"
+    if "가공" in f:
+        return "가공식품DB"
+    if "건강기능" in f or "건기식" in f:
+        return "건강기능식품DB"
+    if "농" in f or "축" in f or "수산" in f or "성분표" in f or "원재료" in f:
+        return "농·축·수산물DB (원재료성)"
+    return "기타 식약처DB"
 
 def clean_float_with_unit(val, default=0.0) -> float:
     """단위(mg, g, ml 등)를 감안한 수치 파싱 (예: '350mg' -> 0.35g)"""
@@ -204,29 +218,88 @@ def find_best_sheet_and_header(excel_path: str) -> Tuple[str, int]:
 
     return best_sheet, best_header_row
 
-def import_excel_to_sqlite(excel_path: str, source_name: Optional[str] = None) -> int:
-    if not os.path.exists(excel_path):
-        raise FileNotFoundError(f"파일을 찾을 수 없습니다: {excel_path}")
+def load_csv_safely(csv_path: str) -> Tuple[pd.DataFrame, str]:
+    """
+    한국 공공데이터 CSV의 인코딩(UTF-8-SIG, UTF-8, CP949, EUC-KR)과 구분자를 자동 판별하여 읽기
+    """
+    encodings = ["utf-8-sig", "utf-8", "cp949", "euc-kr"]
+    last_err = None
 
-    source = source_name or os.path.basename(excel_path)
-    print(f"\n[INFO] 엑셀 파일 분석 시작: {source}")
+    for enc in encodings:
+        try:
+            with open(csv_path, "r", encoding=enc, errors="replace") as f:
+                lines = [f.readline() for _ in range(15)]
 
-    best_sheet, header_row = find_best_sheet_and_header(excel_path)
-    print(f"[INFO] 선택된 시트: '{best_sheet}', 헤더 위치: 행 {header_row}")
+            header_row = 0
+            max_score = -1
+            for idx, line in enumerate(lines):
+                if not line.strip():
+                    continue
+                score = 0
+                for kw in ["식품명", "음식명", "식품이름", "SAMPLE_NAME", "식품코드", "FOOD_CD", "에너지", "열량", "단백질", "칼슘"]:
+                    if kw in line:
+                        score += 1
+                if score > max_score:
+                    max_score = score
+                    header_row = idx
 
-    df = pd.read_excel(excel_path, sheet_name=best_sheet, header=header_row)
-    print(f"[INFO] 로드 완료: 총 {len(df):,}행, {len(df.columns)}개 컬럼")
+            delim = ","
+            if header_row < len(lines):
+                sample_line = lines[header_row]
+                if sample_line.count("\t") > sample_line.count(","):
+                    delim = "\t"
+                elif sample_line.count(";") > sample_line.count(","):
+                    delim = ";"
 
+            df = pd.read_csv(
+                csv_path, 
+                encoding=enc, 
+                header=header_row, 
+                sep=delim, 
+                on_bad_lines="skip", 
+                low_memory=False
+            )
+            if len(df) > 0 and len(df.columns) >= 3:
+                return df, enc
+        except Exception as e:
+            last_err = e
+            continue
+
+    # 최종 fallback
+    fallback_df = pd.read_csv(csv_path, encoding="cp949", on_bad_lines="skip", low_memory=False)
+    return fallback_df, "cp949(fallback)"
+
+def import_file_to_sqlite(file_path: str, source_name: Optional[str] = None) -> int:
+    """
+    식약처 CSV 및 XLSX/XLS 파일을 통합 수신하여 SQLite DB에 적재
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"파일을 찾을 수 없습니다: {file_path}")
+
+    source = source_name or os.path.basename(file_path)
+    is_csv = file_path.lower().endswith(('.csv', '.txt'))
+    print(f"\n[INFO] 식약처 데이터 파일 분석 시작: {source} (형식: {'CSV' if is_csv else 'Excel'})")
+
+    if is_csv:
+        df, detected_enc = load_csv_safely(file_path)
+        print(f"[INFO] CSV 로드 완료 ({detected_enc}): 총 {len(df):,}행, {len(df.columns)}개 컬럼")
+    else:
+        best_sheet, header_row = find_best_sheet_and_header(file_path)
+        print(f"[INFO] Excel 선택 시트: '{best_sheet}', 헤더 위치: 행 {header_row}")
+        df = pd.read_excel(file_path, sheet_name=best_sheet, header=header_row)
+        print(f"[INFO] Excel 로드 완료: 총 {len(df):,}행, {len(df.columns)}개 컬럼")
+
+    # 단위 행(kcal, g, mg 등) 스킵
     if len(df) > 0 and df.iloc[0].astype(str).str.contains(r'kcal|g|mg|단위', case=False).any():
         df = df.iloc[1:]
 
     col_map = match_columns(list(df.columns))
-    print("[INFO] 매핑된 주요 영양/무기질/비타민 컬럼:")
+    print("[INFO] 매핑된 주요 컬럼:")
     for std_k, mapped_c in col_map.items():
         print(f"  - {std_k}: '{mapped_c}'")
 
     if "name" not in col_map:
-        raise ValueError(f"식품명 컬럼을 자동으로 인식하지 못했습니다. (선택 시트: {best_sheet})")
+        raise ValueError(f"식품명 컬럼을 자동으로 인식하지 못했습니다. (컬럼 목록: {list(df.columns)[:10]}...)")
 
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
@@ -234,6 +307,7 @@ def import_excel_to_sqlite(excel_path: str, source_name: Optional[str] = None) -
     cursor.execute("PRAGMA synchronous = OFF")
     cursor.execute("PRAGMA journal_mode = MEMORY")
 
+    # 동일 소스 기존 데이터 삭제 (멱등성 보장)
     cursor.execute("DELETE FROM foods WHERE source = ?", (source,))
 
     records = []
@@ -308,21 +382,29 @@ def import_excel_to_sqlite(excel_path: str, source_name: Optional[str] = None) -
     print(f"[SUCCESS] {source} -> {len(records):,}건 적재 성공!\n")
     return len(records)
 
+# 이전 호환성 유지용 래퍼 함수
+def import_excel_to_sqlite(excel_path: str, source_name: Optional[str] = None) -> int:
+    return import_file_to_sqlite(excel_path, source_name=source_name)
+
+def import_csv_to_sqlite(csv_path: str, source_name: Optional[str] = None) -> int:
+    return import_file_to_sqlite(csv_path, source_name=source_name)
+
 def sync_all_raw_files() -> Dict[str, Any]:
-    xlsx_files = glob.glob(os.path.join(RAW_DATA_DIR, "*.xlsx"))
+    raw_files = glob.glob(os.path.join(RAW_DATA_DIR, "*.xlsx")) + glob.glob(os.path.join(RAW_DATA_DIR, "*.csv"))
     results = {}
     total_added = 0
-    for f in xlsx_files:
+    for f in raw_files:
         fname = os.path.basename(f)
         try:
-            cnt = import_excel_to_sqlite(f, source_name=fname)
-            results[fname] = {"status": "success", "count": cnt}
+            cnt = import_file_to_sqlite(f, source_name=fname)
+            category = classify_mfds_category(fname)
+            results[fname] = {"status": "success", "count": cnt, "category": category}
             total_added += cnt
         except Exception as e:
             results[fname] = {"status": "error", "error": str(e)}
 
     return {
-        "total_files": len(xlsx_files),
+        "total_files": len(raw_files),
         "total_records": total_added,
         "details": results
     }
@@ -332,7 +414,7 @@ if __name__ == "__main__":
     init_database()
 
     if len(sys.argv) > 1:
-        import_excel_to_sqlite(sys.argv[1])
+        import_file_to_sqlite(sys.argv[1])
     else:
         res = sync_all_raw_files()
         print("[SUMMARY]", res)

@@ -7,9 +7,13 @@ env/
 .env
 backend/.env
 
-# 대용량 원본 식약처 엑셀 파일 (GitHub 100MB 단일 파일 용량 제한 방지)
+# 대용량 모델 가중치 파일 (GitHub 100MB 단일 파일 제한 방지)
+backend/models/*.onnx
+
+# 대용량 원본 식약처 엑셀/CSV 파일 (GitHub 100MB 단일 파일 용량 제한 방지)
 backend/data/raw/*.xlsx
 backend/data/raw/*.xls
+backend/data/raw/*.csv
 
 # 파이썬 캐시
 __pycache__/
