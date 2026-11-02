@@ -4,13 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>🏝️ Nutri-Island: 나만의 영양 마법의 섬</title>
-  <!-- Google Fonts & Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind CSS: 로컬 우선 서빙 (교내/기관 방화벽 및 CDN 차단 완벽 방어) -->
+  <script src="/assets/tailwind-cdn.js"></script>
+  <script>
+    if (!window.tailwind) {
+      document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <!-- 폭죽 & 스크린샷 엔진: 로컬 우선 서빙 -->
+  <script src="/assets/confetti.browser.min.js"></script>
+  <script src="/assets/html2canvas.min.js"></script>
 
   <style>
     * {

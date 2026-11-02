@@ -374,13 +374,6 @@ FRONTEND_ASSETS = os.path.join(PROJECT_ROOT, "frontend", "public", "assets")
 os.makedirs(FRONTEND_ASSETS, exist_ok=True)
 app.mount("/assets", StaticFiles(directory=FRONTEND_ASSETS), name="assets")
 
-@app.get("/assets/{file_name}")
-def serve_asset(file_name: str):
-    file_path = os.path.join(FRONTEND_ASSETS, file_name)
-    if os.path.exists(file_path):
-        return FileResponse(file_path)
-    raise HTTPException(status_code=404, detail="Asset not found")
-
 @app.get("/", response_class=HTMLResponse)
 def serve_index():
     if os.path.exists(FRONTEND_INDEX):
